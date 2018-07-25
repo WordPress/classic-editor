@@ -2,7 +2,7 @@
 Contributors: azaozz
 Requires at least: 4.9
 Tested up to: 4.9
-Stable tag: 0.2
+Stable tag: 0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -10,11 +10,9 @@ Restores the Classic Editor and the old-style Edit Post screen layout (TinyMCE, 
 
 == Description ==
 
-<strong>Warning: This is beta software, do not run on production sites!</strong>
+Classic Editor restores the previous WordPress editor and the Edit Post screen and makes it possible to use the plugins that extend it, add old-style meta boxes, or otherwise depend on the previous editor.
 
-Requires WordPress 4.9-beta2 or newer and Gutenberg plugin 1.5 or newer.
-
-Classic Editor restores the previous Edit Post screen and makes it possible to use the WordPress plugins that extend it, add old-style meta boxes, or otherwise depend on the previous editor.
+By default it will hide all traces of the new Gutenberg editor including the Dashboard widget asking the users to try it.
 
 It has two modes:
 
@@ -23,9 +21,12 @@ It has two modes:
 
 The modes can be changed from the Settings -> Writing screen. See the screenshots.
 
-The current release is intended for testing with the [Gutenberg plugin](https://wordpress.org/plugins/gutenberg/) version 1.5 or newer.
-
 == Changelog ==
+= 0.4 =
+Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
+Fixed to always show the settings and the settings link in the plugins list table.
+Updated the readme text.
+
 = 0.3 =
 Updated the option from a checkbox to couple of radio buttons, seems clearer. Thanks to @designsimply for the label text suggestions.
 Some general updates and cleanup.

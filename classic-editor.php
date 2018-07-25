@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen layout (TinyMCE, meta boxes, etc.). Supports the older plugins that extend this screen.
- * Version:     0.3
+ * Version:     0.4
  * Author:      WordPress Contributors
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -45,6 +45,13 @@ function classic_editor_is_gutenberg_active() {
 
 add_action( 'plugins_loaded', 'classic_editor_init_actions' );
 function classic_editor_init_actions() {
+	// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
+	remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
+
+	// Always show the settings and the link to them in the plugins list table.
+	add_filter( 'plugin_action_links', 'classic_editor_add_settings_link', 10, 2 );
+	add_action( 'admin_init', 'classic_editor_admin_init' );
+
 	if ( ! classic_editor_is_gutenberg_active() || ! (
 		has_filter( 'replace_editor', 'gutenberg_init' ) ||
 		has_filter( 'load-post.php', 'gutenberg_intercept_edit_post' ) ) ) {
@@ -141,14 +148,8 @@ function classic_editor_init_actions() {
 		add_filter( 'redirect_post_location', 'classic_editor_redirect_location' );
 	}
 
-	add_action( 'admin_init', 'classic_editor_admin_init' );
-	add_filter( 'plugin_action_links', 'classic_editor_add_settings_link', 10, 2 );
-
 	// Gutenberg plugin: remove the "Classic editor" row actions.
 	remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
-
-	// Remove the "Try Gutenberg" dashboard widget.
-	remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
 }
 
 function classic_editor_admin_init() {
