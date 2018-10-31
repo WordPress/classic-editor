@@ -1,8 +1,8 @@
 === Classic Editor ===
 Contributors: azaozz
 Requires at least: 4.9
-Tested up to: 4.9
-Stable tag: 0.3
+Tested up to: 5.0-beta1
+Stable tag: 0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,16 +12,21 @@ Restores the Classic Editor and the old-style Edit Post screen layout (TinyMCE, 
 
 Classic Editor restores the previous WordPress editor and the Edit Post screen and makes it possible to use the plugins that extend it, add old-style meta boxes, or otherwise depend on the previous editor.
 
-By default it will hide all traces of the new Gutenberg editor including the Dashboard widget asking the users to try it.
+By default it will hide all traces of the new Block editor and the Gutenberg editor including the Dashboard widget asking the users to try it.
 
 It has two modes:
 
-1. Fully replaces the Gutenberg editor and restores the Edit Post template.
-2. Adds alternate "Edit" links to the Posts and Pages screens, on the toolbar at the top of the screen, and in the admin menu. Using these links will open the corresponding post or page in the Classic Editor.
+1. Fully replaces the Block editor and the Gutenberg editor, and restores the Edit Post template.
+2. Adds alternate "Edit" links to the Posts and Pages screens, on the toolbar at the top of the screen, and in the admin menu. Using these links will open the corresponding post or page in the Classic editor.
 
 The modes can be changed from the Settings -> Writing screen. See the screenshots.
 
 == Changelog ==
+= 0.5 =
+Updated for Gutenberg 4.1 and WordPress 5.0-beta1.
+Removed some functionality that now exists in Gutenberg.
+Fixed redirecting back to the CLassic editor after looking at post revisions.
+
 = 0.4 =
 Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
 Fixed to always show the settings and the settings link in the plugins list table.

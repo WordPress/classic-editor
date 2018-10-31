@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen layout (TinyMCE, meta boxes, etc.). Supports the older plugins that extend this screen.
- * Version:     0.4
+ * Version:     0.5
  * Author:      WordPress Contributors
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -26,45 +26,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Invalid request.' );
 }
 
-/**
- * Check if Gutenberg is active.
- *
- * Cannot use `is_plugin_active()` as it loads late and only in wp-admin.
- *
- * @return bool Whether the Gutenberg plugin is active.
- */
-function classic_editor_is_gutenberg_active() {
-	if ( in_array( 'gutenberg/gutenberg.php', (array) get_option( 'active_plugins' ) ) ||
-		( is_multisite() && array_key_exists( 'gutenberg/gutenberg.php', (array) get_site_option( 'active_sitewide_plugins' ) ) ) ) {
-
-		return true;
-	}
-
-	return false;
-}
-
 add_action( 'plugins_loaded', 'classic_editor_init_actions' );
 function classic_editor_init_actions() {
+	$gutenberg = false;
+	$block_editor = false;
+
 	// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
+	// TODO: not needed in 5.0-beta
 	remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
 
 	// Always show the settings and the link to them in the plugins list table.
 	add_filter( 'plugin_action_links', 'classic_editor_add_settings_link', 10, 2 );
 	add_action( 'admin_init', 'classic_editor_admin_init' );
 
-	if ( ! classic_editor_is_gutenberg_active() || ! (
-		has_filter( 'replace_editor', 'gutenberg_init' ) ||
-		has_filter( 'load-post.php', 'gutenberg_intercept_edit_post' ) ) ) {
+	if ( has_filter( 'replace_editor', 'gutenberg_init' ) ) {
+		// Gutenberg is installed and activated.
+		$gutenberg = true;
+	}
 
-		// Gutenberg is not installed or activated. No need to do anything :)
-		return;
+	if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' ) ) {
+		// Block editor.
+		$block_editor = true;
+	}
+
+	if ( ! $gutenberg && ! $block_editor ) {
+		return; // Nothing to do :)
 	}
 
 	$replace = ( get_option( 'classic-editor-replace' ) !== 'no-replace' );
 
-	if ( $replace || isset( $_GET['classic-editor'] ) ) {
+	if ( $block_editor && ( $replace || isset( $_GET['classic-editor'] ) ) ) {
+		// TODO: consider disabling other block editor functionality.
+		add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
+	}
+
+	if ( $gutenberg && ( $replace || isset( $_GET['classic-editor'] ) ) ) {
 		// gutenberg.php
 		remove_action( 'admin_menu', 'gutenberg_menu' );
+		remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
 		remove_action( 'admin_notices', 'gutenberg_wordpress_version_notice' );
 		remove_action( 'admin_init', 'gutenberg_redirect_demo' );
 
@@ -79,25 +78,13 @@ function classic_editor_init_actions() {
 		// lib/compat.php
 		remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
 
-		// lib/register.php
-		remove_action( 'plugins_loaded', 'gutenberg_trick_plugins_into_registering_meta_boxes' );
-		remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
-
-		remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
-		remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
-		remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
-
 		// lib/rest-api.php
 		remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
 		remove_action( 'rest_api_init', 'gutenberg_add_taxonomy_visibility_field' );
 
 		remove_filter( 'rest_request_after_callbacks', 'gutenberg_filter_oembed_result' );
 		remove_filter( 'registered_post_type', 'gutenberg_register_post_prepare_functions' );
-		remove_filter( 'registered_taxonomy', 'gutenberg_register_taxonomy_prepare_functions' );
-		remove_filter( 'rest_index', 'gutenberg_ensure_wp_json_has_theme_supports' );
-		remove_filter( 'rest_request_before_callbacks', 'gutenberg_handle_early_callback_checks' );
-		remove_filter( 'rest_user_collection_params', 'gutenberg_filter_user_collection_parameters' );
-		remove_filter( 'rest_request_after_callbacks', 'gutenberg_filter_request_after_callbacks' );
+		remove_filter( 'register_post_type_args', 'gutenberg_filter_post_type_labels' );
 
 		// lib/meta-box-partial-page.php
 		remove_action( 'do_meta_boxes', 'gutenberg_meta_box_save', 1000 );
@@ -112,12 +99,27 @@ function classic_editor_init_actions() {
 		// add_filter( 'replace_editor', 'classic_editor_replace' );
 	}
 
-	if ( $replace ) {
+	if ( $gutenberg && $replace ) {
 		// gutenberg.php
-		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
+		remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
 		remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
 
+		remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
+		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
+
+		// Keep
+		// remove_filter( 'wp_kses_allowed_html', 'gutenberg_kses_allowedtags', 10, 2 ); // not needed in 5.0
+		// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
+
+		// lib/compat.php
+		remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
+
 		// lib/register.php
+		remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
+
+		remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
+		remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
+		remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
 		remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 
 		// lib/plugin-compat.php
@@ -136,20 +138,25 @@ function classic_editor_init_actions() {
 		// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
 
 		// remove_action( 'init', 'gutenberg_register_post_types' );
-	} else {
+	}
+
+	if ( ! $replace ) {
 		// Menus
 		add_action( 'admin_menu', 'classic_editor_add_submenus' );
 		add_action( 'admin_bar_menu', 'classic_editor_admin_bar_menu', 120 );
 
 		// Row actions (edit.php)
-		add_filter( 'page_row_actions', 'classic_editor_add_edit_links', 10, 2 );
-		add_filter( 'post_row_actions', 'classic_editor_add_edit_links', 10, 2 );
+		add_filter( 'page_row_actions', 'classic_editor_add_edit_links', 15, 2 );
+		add_filter( 'post_row_actions', 'classic_editor_add_edit_links', 15, 2 );
 
-		add_filter( 'redirect_post_location', 'classic_editor_redirect_location' );
+		add_filter( 'get_edit_post_link', 'classic_editor_get_edit_post_link' );
+
+		if ( ! $gutenberg ) {
+			// Redirect on saving in the classic editor.
+			add_filter( 'redirect_post_location', 'classic_editor_redirect_location' );
+			add_action( 'edit_form_top', 'classic_editor_remember_when_saving_posts' );
+		}
 	}
-
-	// Gutenberg plugin: remove the "Classic editor" row actions.
-	remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
 }
 
 function classic_editor_admin_init() {
@@ -175,13 +182,13 @@ function classic_editor_settings() {
 	<p id="classic-editor-options" style="margin: 0;">
 		<input type="radio" name="classic-editor-replace" id="classic-editor-replace" value="replace"<?php if ( $replace ) echo ' checked'; ?> />
 		<label for="classic-editor-replace">
-		<?php _e( 'Replace the Gutenberg editor with the Classic editor.', 'classic-editor' ); ?>
+		<?php _e( 'Replace the Block editor with the Classic editor.', 'classic-editor' ); ?>
 		</label>
 		<br>
 
 		<input type="radio" name="classic-editor-replace" id="classic-editor-no-replace" value="no-replace"<?php if ( ! $replace ) echo ' checked'; ?> />
 		<label for="classic-editor-no-replace">
-		<?php _e( 'Use the Gutenberg editor by default and include optional links back to the Classic editor.', 'classic-editor' ); ?>
+		<?php _e( 'Use the Block editor by default and include optional links back to the Classic editor.', 'classic-editor' ); ?>
 		</label>
 	</p>
 	<script>
@@ -206,14 +213,38 @@ function classic_editor_validate_options( $value ) {
 }
 
 /**
- * Keep the `classic-editor` query arg. through redirects when saving posts.
+ * Add a hidden field in edit-form-advanced.php
+ * to help redirect back to the classic editor on saving.
+ */
+function classic_editor_remember_when_saving_posts() {
+	?>
+	<input type="hidden" name="classic-editor" value="" />
+	<?php
+}
+
+/**
+ * Keep the `classic-editor` query arg through redirects when saving posts.
  */
 function classic_editor_redirect_location( $location ) {
-	if ( isset( $_POST['_wp_http_referer'] ) && strpos( $_POST['_wp_http_referer'], 'classic-editor=1' ) !== false ) {
-		$location = add_query_arg( 'classic-editor', '1', $location );
+	if (
+		isset( $_REQUEST['classic-editor'] ) ||
+		( isset( $_POST['_wp_http_referer'] ) && strpos( $_POST['_wp_http_referer'], '&classic-editor' ) !== false )
+	) {
+		$location = add_query_arg( 'classic-editor', '', $location );
 	}
 
 	return $location;
+}
+
+/**
+ * Keep the `classic-editor` query arg when looking at revisions.
+ */
+function classic_editor_get_edit_post_link( $url ) {
+	if ( isset( $_REQUEST['classic-editor'] ) ) {
+		$url = add_query_arg( 'classic-editor', '', $url );
+	}
+
+	return $url;
 }
 
 /**
@@ -242,7 +273,7 @@ function classic_editor_add_submenus() {
 
 		$item_name = $type_obj->labels->add_new . ' ' . __( '(Classic)', 'classic-editor' );
 
-		add_submenu_page( $parent_slug, $type_obj->labels->add_new, $item_name, $type_obj->cap->edit_posts, "post-new.php?post_type={$type}&classic-editor=1" );
+		add_submenu_page( $parent_slug, $type_obj->labels->add_new, $item_name, $type_obj->cap->edit_posts, "post-new.php?post_type={$type}&classic-editor" );
 	}
 }
 
@@ -277,14 +308,14 @@ function classic_editor_admin_bar_menu( $wp_admin_bar ) {
 		if ( isset( $_GET['classic-editor'] ) ) {
 			$wp_admin_bar->add_menu( array(
 				'id' => 'classic-editor',
-				'title' => __( 'Edit (Gutenberg)', 'classic-editor' ),
+				'title' => __( 'Edit (Block editor)', 'classic-editor' ),
 				'href' => remove_query_arg( 'classic-editor', $edit_url ),
 			) );
 		} else {
 			$wp_admin_bar->add_menu( array(
 				'id' => 'classic-editor',
 				'title' => __( 'Edit (Classic)', 'classic-editor' ),
-				'href' => add_query_arg( 'classic-editor', '1', $edit_url ),
+				'href' => add_query_arg( 'classic-editor', '', $edit_url ),
 			) );
 		}
 	}
@@ -312,6 +343,11 @@ function classic_editor_add_settings_link( $links, $file ) {
  * @return array   Updated post actions.
  */
 function classic_editor_add_edit_links( $actions, $post ) {
+	// This is in Gutenberg now.
+	if ( array_key_exists( 'classic', $actions ) ) {
+		return $actions;
+	}
+
 	if ( 'trash' === $post->post_status || ! post_type_supports( $post->post_type, 'editor' ) ) {
 		return $actions;
 	}
@@ -322,7 +358,7 @@ function classic_editor_add_edit_links( $actions, $post ) {
 		return $actions;
 	}
 
-	$edit_url = add_query_arg( 'classic-editor', '1', $edit_url );
+	$edit_url = add_query_arg( 'classic-editor', '', $edit_url );
 
 	// Build the classic edit action. See also: WP_Posts_List_Table::handle_row_actions().
 	$title       = _draft_or_post_title( $post->ID );
