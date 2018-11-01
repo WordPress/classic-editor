@@ -1,0 +1,29 @@
+sudo: required
+dist: trusty
+
+# this section doesn't matter because services are managed using lando
+language: php
+php:
+  - '7.0'
+
+env:
+  - WP_VERSION=4.9.7 PHP_VERSION=7.0
+  - WP_VERSION=4.9.8 PHP_VERSION=5.3
+  - WP_VERSION=5.0-beta1 WP_LOCALE=es_ES PHP_VERSION=5.6
+  - WP_VERSION=5.0-beta2 PHP_VERSION=7.2
+
+# https://docs.devwithlando.io/tutorials/lando-and-ci.html#lando-ify-your-travisyml
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-get -y update
+  - sudo apt-get -y install cgroup-bin curl
+  - curl -L -o /tmp/lando-latest.deb https://github.com/lando/lando/releases/download/v3.0.0-rc.1/lando-v3.0.0-rc.1.deb
+  - sudo dpkg -i /tmp/lando-latest.deb
+  - lando version
+  - ./test/lando-setup.sh
+
+script:
+  - true

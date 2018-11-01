@@ -1,0 +1,8 @@
+name: wordpress-classic-editor
+recipe: wordpress
+config:
+  webroot: test/site/
+  php: '7.0'
+tooling:
+  bash:
+    service: appserver
