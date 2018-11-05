@@ -52,6 +52,7 @@ lando wp config set \
     WP_DEBUG true
 
 wp_url="$(lando info | grep -A2 '"urls": \[$' | tail -n 1 | cut -d'"' -f2)"
+lando wp db reset --path=test/site/ --yes
 lando wp core install \
     --path=test/site/ \
     --url="$wp_url" \
