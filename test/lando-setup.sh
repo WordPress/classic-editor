@@ -15,11 +15,22 @@ perl -pi -we "s/^  php: .*/  php: '$PHP_VERSION'/" .lando.yml
 
 lando start -v
 lando wp --version || lando bash test/install-wp-cli.sh
-rm -rf test/site/[a-z]*
-lando wp core download \
-    --path=test/site/ \
-    --version=$WP_VERSION \
-    --locale=$WP_LOCALE
+rm -rf test/site/ test/wordpress/
+
+if [ "$WP_VERSION" = "5.0-nightly" ]; then
+    wget https://wordpress.org/nightly-builds/wordpress-5.0-latest.zip \
+        -O test/wordpress-5.0-latest.zip
+    unzip -q test/wordpress-5.0-latest.zip -d test/ # creates './test/wordpress/' dir
+    mv test/wordpress/ test/site/
+    rm test/wordpress-5.0-latest.zip # clean up after ourselves
+    echo -n 'extracted WP 5.0-nightly: '
+    grep '^\$wp_version' test/site/wp-includes/version.php
+else
+    lando wp core download \
+        --path=test/site/ \
+        --version=$WP_VERSION \
+        --locale=$WP_LOCALE
+fi
 
 lando wp config create \
     --path=test/site/ \
