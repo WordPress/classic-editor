@@ -77,10 +77,6 @@ function classic_editor_init_actions() {
 
 		// lib/compat.php
 		remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
-		// Move the Privacy Policy help notice back under the title field.
-		remove_action( 'admin_notices', 'gutenberg_show_privacy_policy_help_text' );
-		remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
-		add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 
 		// lib/rest-api.php
 		remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
@@ -174,6 +170,11 @@ function classic_editor_admin_init() {
 	) );
 
 	add_settings_field( 'classic-editor', __( 'Classic editor settings', 'classic-editor' ), 'classic_editor_settings', 'writing' );
+
+	// Move the Privacy Policy help notice back under the title field.
+	remove_action( 'admin_notices', 'gutenberg_show_privacy_policy_help_text' );
+	remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
+	add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 }
 
 /**
