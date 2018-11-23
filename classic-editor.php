@@ -45,6 +45,9 @@ class Classic_Editor {
 		// Show warning on the post-upgrade screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'post_upgrade_notice' ) );
 
+		// Move the Privacy Page notice back under the title.
+		add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
+
 		if ( has_filter( 'replace_editor', 'gutenberg_init' ) ) {
 			// Gutenberg is installed and activated.
 			$gutenberg = true;
@@ -94,6 +97,7 @@ class Classic_Editor {
 
 			// lib/compat.php
 			remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
+			remove_action( 'admin_notices', 'gutenberg_show_privacy_policy_help_text' );
 
 			// lib/rest-api.php
 			remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
@@ -288,11 +292,6 @@ class Classic_Editor {
 		) );
 
 		add_settings_field( 'classic-editor', __( 'Classic Editor settings', 'classic-editor' ), array( __CLASS__, 'settings' ), 'writing' );
-
-		// Move the Privacy Policy help notice back under the title field.
-		remove_action( 'admin_notices', 'gutenberg_show_privacy_policy_help_text' );
-		remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
-		add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -667,6 +666,17 @@ class Classic_Editor {
 		array_splice( $actions, $edit_offset, 1, $edit_actions );
 
 		return $actions;
+	}
+
+	public static function on_admin_init() {
+		$settings = self::get_settings();
+		$post_id = self::get_edited_post_id();
+
+		if ( $settings['replace'] || self::is_classic( $post_id ) ) {
+			// Move the Privacy Policy help notice back under the title field.
+			remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
+			add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
+		}
 	}
 
 	/**
