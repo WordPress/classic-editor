@@ -453,9 +453,9 @@ class Classic_Editor {
 		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
 
 		if ( $settings['allow-users'] && current_user_can( 'edit_posts' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sCalssic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
 		} elseif ( current_user_can( 'manage_options' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sCalssic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
 		?>
