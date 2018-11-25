@@ -138,7 +138,7 @@ class Classic_Editor {
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 
 			// lib/plugin-compat.php
-			remove_filter( 'rest_pre_insert_post', 'gutenberg_remove_wpcom_markdown_support' );
+			remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
 
 			// Keep
 
