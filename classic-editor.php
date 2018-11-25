@@ -43,7 +43,7 @@ class Classic_Editor {
 		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
 
 		// Show warning on the post-upgrade screen (about.php).
-		add_action( 'all_admin_notices', array( __CLASS__, 'post_upgrade_notice' ) );
+		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 
 		if ( has_filter( 'replace_editor', 'gutenberg_init' ) ) {
 			// Gutenberg is installed and activated.
@@ -441,7 +441,7 @@ class Classic_Editor {
 		}
 	}
 
-	public static function post_upgrade_notice() {
+	public static function notice_after_upgrade() {
 		global $pagenow;
 		$settings = self::get_settings();
 
@@ -459,9 +459,9 @@ class Classic_Editor {
 		}
 
 		?>
-		<div id="message" class="error notice" style="display: block !important"><p>
-			<?php echo $message; ?>
-		</p></div>
+		<div id="message" class="error notice" style="display: block !important">
+			<p><?php echo $message; ?></p>
+		</div>
 		<?php
 	}
 
