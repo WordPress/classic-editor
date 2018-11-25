@@ -28,6 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
+	const plugin_version = 1.0;
 
 	private function __construct() {}
 
@@ -167,6 +168,10 @@ class Classic_Editor {
 			add_filter( 'use_block_editor_for_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 			add_filter( 'redirect_post_location', array( __CLASS__, 'redirect_location' ) );
 			add_action( 'edit_form_top', array( __CLASS__, 'add_field' ) );
+			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
+
+			// TODO
+			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
 
 			if ( $settings['remember'] ) {
 				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic' ) );
@@ -222,7 +227,7 @@ class Classic_Editor {
 
 		if ( $use_defaults ) {
 			$replace = get_option( 'classic-editor-replace' ) !== 'no-replace';
-			$remember = get_option( 'classic-editor-remember' ) === 'remember';
+			$remember = ( ! $replace && get_option( 'classic-editor-remember' ) === 'remember' );
 		}
 
 		return array(
@@ -287,7 +292,9 @@ class Classic_Editor {
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		add_settings_field( 'classic-editor', __( 'Classic Editor settings', 'classic-editor' ), array( __CLASS__, 'settings' ), 'writing' );
+		add_settings_field( 'classic-editor-1', __( 'Default editor for all users', 'classic-editor' ), array( __CLASS__, 'admin_settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-2', __( 'Open the last editor used for each post', 'classic-editor' ), array( __CLASS__, 'admin_settings_2' ), 'writing' );
+		add_settings_field( 'classic-editor-3', __( 'Allow users to switch editors', 'classic-editor' ), array( __CLASS__, 'admin_settings_3' ), 'writing' );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -330,6 +337,78 @@ class Classic_Editor {
 		}
 
 		return 'disallow';
+	}
+
+	public static function admin_settings_1() {
+		$settings = self::get_settings();
+
+		?>
+		<div class="classic-editor-options">
+			<label for="classic-editor-replace" class="screen-reader-text">
+				<?php _e( 'Select default editor for all users', 'classic-editor' ); ?>
+			</label>
+			<select name="classic-editor-replace" id="classic-editor-replace">
+				<option value="no-replace"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
+				<option value="replace"<?php if ( $settings['replace'] ) echo ' selected'; ?>><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
+			</select>
+			<!--<p class="help"><?php _e( 'Includes optional links back to the Classic editor when the Block editor is selected.', 'classic-editor' ); ?></p>-->
+		</div>
+		<?php
+	}
+
+	public static function admin_settings_2() {
+		$settings = self::get_settings();
+		$disabled = $settings['replace'] ? ' disabled' : '';
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
+
+		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( ! $disabled && $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" id="classic-editor-no-remember" value="no-remember"<?php echo $disabled; if ( ! $disabled && ! $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
+		<script>
+		jQuery( 'document' ).ready( function( $ ) {
+			var select = $( '#classic-editor-replace' );
+
+			if ( window.location.hash === '#classic-editor-options' ) {
+				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
+			}
+			select.on( 'change', function() {
+				if ( select.find( ':selected' ).val() === 'replace' ) {
+					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
+				} else {
+					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
+				}
+			});
+		} );
+		</script>
+		<?php
+	}
+
+	public static function admin_settings_3() {
+		$settings = self::get_settings();
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
+
+		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-allow-users" id="classic-editor-no-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
+		<?php
 	}
 
 	/**
@@ -538,6 +617,66 @@ class Classic_Editor {
 		return $url;
 	}
 
+	public static function add_meta_box( $post_type, $post ) {
+		if ( ! self::is_classic( $post->ID ) || ! use_block_editor_for_post_type( $post_type ) ) {
+			return;
+		}
+
+		$id = 'classic-editor-switch-editor';
+		$title = __( 'Editor', 'classic-editor' );
+		$callback = array( __CLASS__, 'do_meta_box' );
+		$args = array(
+			'__back_compat_meta_box' => true,
+	    );
+
+		add_meta_box( $id, $title, $callback, null, 'side', 'default', $args );
+	}
+
+	public static function do_meta_box( $post ) {
+		$edit_url = get_edit_post_link( $post->ID, 'raw' );
+		$settings = self::get_settings();
+
+		$edit_url = remove_query_arg( 'classic-editor', $edit_url );
+
+		if ( $settings['remember'] ) {
+			// Forget the previous value when going to a specific editor.
+			$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
+		}
+
+		?>
+		<p>
+			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select editor' ); ?></label>
+			<select id="classic-editor-switch-editor" style="width: 100%;max-width: 20em;">
+				<option value=""><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
+				<option value="" data-url="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
+			</select>
+		</p>
+		<script>
+		jQuery( 'document' ).ready( function( $ ) {
+			var $select = $( '#classic-editor-switch-editor' );
+			$select.on( 'change', function( event ) {
+				var url = $select.find( ':selected' ).attr( 'data-url' );
+				if ( url ) {
+					document.location = url;
+				}
+			} );
+		} );
+		</script>
+		<?php
+	}
+
+	public static function enqueue_scripts() {
+		wp_enqueue_script(
+			'classic-editor-add-submenu',
+			plugins_url( 'js/block-editor-plugin.js', __FILE__ ),
+			array( 'wp-element', 'wp-components', 'lodash' ),
+			self::plugin_version,
+			true
+		);
+
+		wp_localize_script( 'classic-editor-add-submenu', 'classicEditorPluginL10n', array( 'linkText' => __( 'Switch to Classic Editor' ) ) );
+	}
+
 	/**
 	 * Add an `Add New (Classic)` submenu for Posts, Pages, etc.
 	 */
@@ -562,31 +701,9 @@ class Classic_Editor {
 				$parent_slug = $type_obj->show_in_menu;
 			}
 
-			$item_name = $type_obj->labels->add_new . ' ' . __( ' (Classic editor)', 'classic-editor' );
+			$item_name = $type_obj->labels->add_new . ' ' . __( '(Classic)', 'classic-editor' );
 			$path = "post-new.php?post_type={$type}&classic-editor";
 			add_submenu_page( $parent_slug, $type_obj->labels->add_new, $item_name, $type_obj->cap->edit_posts, $path );
-
-			// Add "Edit in Classic editor" and "Edit in Block editor" submenu items.
-			$post_id = self::get_edited_post_id();
-
-			if ( $post_id && get_post_type( $post_id ) === $type ) {
-				$edit_url = "post.php?post={$post_id}&action=edit";
-				$settings = self::get_settings();
-
-				if ( $settings['remember'] ) {
-					// Forget the previous value when going to a specific editor.
-					$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
-				}
-
-				// Block editor.
-				$name = __( 'Edit in Block editor', 'classic-editor' );
-				add_submenu_page( $parent_slug, $type_obj->labels->edit_item, $name, $type_obj->cap->edit_posts, $edit_url );
-
-				// Classic editor.
-				$name = __( 'Edit in Classic editor', 'classic-editor' );
-				$url = add_query_arg( 'classic-editor', '', $edit_url );
-				add_submenu_page( $parent_slug, $type_obj->labels->edit_item, $name, $type_obj->cap->edit_posts, $url );
-			}
 		}
 	}
 
