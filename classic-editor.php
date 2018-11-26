@@ -44,6 +44,9 @@ class Classic_Editor {
 		// Show warning on the post-upgrade screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 
+		// Move the Privacy Page notice back under the title.
+		add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
+
 		$settings = self::get_settings();
 
 		if ( ! $settings['hide-settings-ui'] ) {
@@ -617,6 +620,17 @@ class Classic_Editor {
 		array_splice( $actions, $edit_offset, 1, $edit_actions );
 
 		return $actions;
+	}
+
+	public static function on_admin_init() {
+		$settings = self::get_settings();
+		$post_id = self::get_edited_post_id();
+
+		if ( $settings['replace'] || self::is_classic( $post_id ) ) {
+			// Move the Privacy Policy help notice back under the title field.
+			remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
+			add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
+		}
 	}
 
 	/**
