@@ -34,33 +34,15 @@ class Classic_Editor {
 	private function __construct() {}
 
 	public static function init_actions() {
-		$gutenberg = false;
-		$block_editor = false;
-		$post_id = 0;
+		if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '<' ) ) {
+			return; // Nothing to do :)
+		}
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
 
-		// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
-		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
-
 		// Show warning on the post-upgrade screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
-
-		if ( has_filter( 'replace_editor', 'gutenberg_init' ) ) {
-			// Gutenberg is installed and activated.
-			$gutenberg = true;
-			$post_id = self::get_edited_post_id();
-		}
-
-		if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' ) ) {
-			// Block editor.
-			$block_editor = true;
-		}
-
-		if ( ! $gutenberg && ! $block_editor ) {
-			return; // Nothing to do :)
-		}
 
 		$settings = self::get_settings();
 
@@ -74,90 +56,10 @@ class Classic_Editor {
 			add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
 		}
 
-		if ( $block_editor && $settings['replace'] ) {
+		if ( $settings['replace'] ) {
 			// Consider disabling other block editor functionality.
 			add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
-		}
-
-		if ( $gutenberg && ( $settings['replace'] || self::is_classic( $post_id ) ) ) {
-			// gutenberg.php
-			remove_action( 'admin_menu', 'gutenberg_menu' );
-			remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
-			remove_action( 'admin_notices', 'gutenberg_wordpress_version_notice' );
-			remove_action( 'admin_init', 'gutenberg_redirect_demo' );
-
-			remove_filter( 'replace_editor', 'gutenberg_init' );
-
-			// lib/client-assets.php
-			remove_action( 'wp_enqueue_scripts', 'gutenberg_register_scripts_and_styles', 5 );
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_register_scripts_and_styles', 5 );
-			remove_action( 'wp_enqueue_scripts', 'gutenberg_common_scripts_and_styles' );
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_common_scripts_and_styles' );
-
-			// lib/compat.php
-			remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
-
-			// lib/rest-api.php
-			remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
-			remove_action( 'rest_api_init', 'gutenberg_add_taxonomy_visibility_field' );
-
-			remove_filter( 'rest_request_after_callbacks', 'gutenberg_filter_oembed_result' );
-			remove_filter( 'registered_post_type', 'gutenberg_register_post_prepare_functions' );
-			remove_filter( 'register_post_type_args', 'gutenberg_filter_post_type_labels' );
-
-			// lib/meta-box-partial-page.php
-			remove_action( 'do_meta_boxes', 'gutenberg_meta_box_save', 1000 );
-			remove_action( 'submitpost_box', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'submitpage_box', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'edit_page_form', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'edit_form_advanced', 'gutenberg_intercept_meta_box_render' );
-
-			remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
-			remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
-		}
-
-		if ( $gutenberg && $settings['replace'] ) {
-			// gutenberg.php
-			remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
-			remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
-
-			remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
-			remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
-
-			// Keep
-			// remove_filter( 'wp_kses_allowed_html', 'gutenberg_kses_allowedtags', 10, 2 ); // not needed in 5.0
-			// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
-
-			// lib/compat.php
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
-
-			// lib/register.php
-			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
-
-			remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
-			remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
-			remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
-			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
-
-			// lib/plugin-compat.php
-			remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
-
-			// Keep
-
-			// lib/blocks.php
-			// remove_filter( 'the_content', 'do_blocks', 9 );
-
-			// Continue to disable wpautop inside TinyMCE for posts that were started in Gutenberg.
-			// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
-
-			// Keep the tweaks to the PHP wpautop.
-			// add_filter( 'the_content', 'wpautop' );
-			// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
-
-			// remove_action( 'init', 'gutenberg_register_post_types' );
-		}
-
-		if ( ! $settings['replace'] ) {
+		} else {
 			// Menus
 			add_action( 'admin_menu', array( __CLASS__, 'add_submenus' ) );
 
@@ -171,7 +73,7 @@ class Classic_Editor {
 			add_action( 'edit_form_top', array( __CLASS__, 'add_field' ) );
 			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
 
-			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309 
+			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309
 			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
 
 			if ( $settings['remember'] ) {
@@ -204,7 +106,7 @@ class Classic_Editor {
 				'hide-settings-ui' => true,
 			);
 		}
-		
+
 		if ( ! empty( self::$settings ) && $update === 'no' ) {
 			return self::$settings;
 		}
@@ -241,7 +143,7 @@ class Classic_Editor {
 			'hide-settings-ui' => false,
 			'allow-users' => get_option( 'classic-editor-allow-users' ) !== 'disallow',
 		);
-		
+
 		return self::$settings;
 	}
 
@@ -320,7 +222,6 @@ class Classic_Editor {
 
 			if ( $value === 'no-replace' && $_POST['classic-editor-remember'] === 'remember' ) {
 				$value = 'remember';
-
 			}
 
 			update_user_option( $user_id, 'classic-editor-settings', $value );
@@ -417,7 +318,7 @@ class Classic_Editor {
 		</div>
 		<?php
 	}
-	
+
 	/**
 	 * Shown on the Profile page when allowed by admin.
 	 */
