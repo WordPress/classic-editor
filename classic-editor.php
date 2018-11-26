@@ -29,6 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
 	const plugin_version = 1.0;
+	private static $settings;
 
 	private function __construct() {}
 
@@ -70,7 +71,7 @@ class Classic_Editor {
 
 			// User settings.
 			add_action( 'personal_options_update', array( __CLASS__, 'save_user_settings' ) );
-			add_action( 'profile_personal_options', array( __CLASS__, 'settings' ) );
+			add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
 		}
 
 		if ( $block_editor && $settings['replace'] ) {
@@ -170,7 +171,7 @@ class Classic_Editor {
 			add_action( 'edit_form_top', array( __CLASS__, 'add_field' ) );
 			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
 
-			// TODO
+			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309 
 			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
 
 			if ( $settings['remember'] ) {
@@ -180,7 +181,7 @@ class Classic_Editor {
 		}
 	}
 
-	private static function get_settings() {
+	private static function get_settings( $update = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings and hide the settings UI.
 		 *
@@ -202,6 +203,10 @@ class Classic_Editor {
 				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ),
 				'hide-settings-ui' => true,
 			);
+		}
+		
+		if ( ! empty( self::$settings ) && $update === 'no' ) {
+			return self::$settings;
 		}
 
 		$use_defaults = true;
@@ -230,12 +235,14 @@ class Classic_Editor {
 			$remember = ( ! $replace && get_option( 'classic-editor-remember' ) === 'remember' );
 		}
 
-		return array(
+		self::$settings = array(
 			'replace' => $replace,
 			'remember' => $remember,
 			'hide-settings-ui' => false,
 			'allow-users' => get_option( 'classic-editor-allow-users' ) !== 'disallow',
 		);
+		
+		return self::$settings;
 	}
 
 	private static function is_classic( $post_id = 0 ) {
@@ -292,9 +299,9 @@ class Classic_Editor {
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		add_settings_field( 'classic-editor-1', __( 'Default editor for all users', 'classic-editor' ), array( __CLASS__, 'admin_settings_1' ), 'writing' );
-		add_settings_field( 'classic-editor-2', __( 'Open the last editor used for each post', 'classic-editor' ), array( __CLASS__, 'admin_settings_2' ), 'writing' );
-		add_settings_field( 'classic-editor-3', __( 'Allow users to switch editors', 'classic-editor' ), array( __CLASS__, 'admin_settings_3' ), 'writing' );
+		add_settings_field( 'classic-editor-1', __( 'Default editor for all users', 'classic-editor' ), array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-2', __( 'Open the last editor used for each post', 'classic-editor' ), array( __CLASS__, 'settings_2' ), 'writing' );
+		add_settings_field( 'classic-editor-3', __( 'Allow users to switch editors', 'classic-editor' ), array( __CLASS__, 'settings_3' ), 'writing' );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -339,8 +346,8 @@ class Classic_Editor {
 		return 'disallow';
 	}
 
-	public static function admin_settings_1() {
-		$settings = self::get_settings();
+	public static function settings_1() {
+		$settings = self::get_settings( 'update' );
 
 		?>
 		<div class="classic-editor-options">
@@ -356,8 +363,8 @@ class Classic_Editor {
 		<?php
 	}
 
-	public static function admin_settings_2() {
-		$settings = self::get_settings();
+	public static function settings_2() {
+		$settings = self::get_settings( 'update' );
 		$disabled = $settings['replace'] ? ' disabled' : '';
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
@@ -392,8 +399,8 @@ class Classic_Editor {
 		<?php
 	}
 
-	public static function admin_settings_3() {
-		$settings = self::get_settings();
+	public static function settings_3() {
+		$settings = self::get_settings( 'update' );
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
@@ -410,114 +417,40 @@ class Classic_Editor {
 		</div>
 		<?php
 	}
-
+	
 	/**
-	 * Output HTML for the settings.
+	 * Shown on the Profile page when allowed by admin.
 	 */
-	public static function settings() {
+	public static function user_settings() {
 		global $user_can_edit;
-		$settings = self::get_settings();
+		$settings = self::get_settings( 'update' );
 
-		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
-			if ( ! $user_can_edit || ! $settings['allow-users'] ) {
-				// Show these options to "author" and above, same as the "Disable the Visual editor when writing" checkbox.
-				return;
-			}
-
-			$site_wide = false;
-		} else {
-			 $site_wide = true;
+		if (
+			! defined( 'IS_PROFILE_PAGE' ) ||
+			! IS_PROFILE_PAGE ||
+			! $user_can_edit ||
+			! $settings['allow-users']
+		) {
+			return;
 		}
 
-
-		$disabled = $settings['replace'] ? ' disabled' : '';
-
-		if ( ! $site_wide ) {
-			?>
-			<table class="form-table">
+		?>
+		<table class="form-table">
 			<tr>
-			<th scope="row"><?php _e( 'Classic Editor settings', 'classic-editor' ); ?></th>
-			<td>
-			<?php
-
-			wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' );
-		}
-
-		?>
-		<div id="classic-editor-options" style="margin: 0;">
-		<?php
-
-		if ( $site_wide ) {
-			?>
-			<h4 style="margin: 0.4em 0 0.7em;"><?php _e( 'Default site-wide options', 'classic-editor' ); ?></h4>
-			<?php
-		}
-
-		?>
-		<p>
-		<input type="radio" name="classic-editor-replace" id="classic-editor-replace" value="replace"<?php if ( $settings['replace'] ) echo ' checked'; ?> />
-		<label for="classic-editor-replace">
-		<?php _e( 'Replace the Block editor with the Classic editor.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<p>
-		<input type="radio" name="classic-editor-replace" id="classic-editor-no-replace" value="no-replace"<?php if ( ! $settings['replace'] ) echo ' checked'; ?> />
-		<label for="classic-editor-no-replace">
-		<?php _e( 'Use the Block editor by default and include optional links back to the Classic editor.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<p>
-		<input type="checkbox" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( $settings['remember'] ) echo ' checked'; ?> />
-		<label for="classic-editor-remember">
-		<?php _e( 'Remember whether the Block or the Classic editor was used for each post and open the same editor next time.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<?php
-
-		if ( $site_wide ) {
-			?>
-			<h4 style="margin-bottom: 0.7em;"><?php _e( 'Admin options', 'classic-editor' ); ?></h4>
-			<p class="help"><?php _e( 'When enabled each user can set their personal preferences on the User Profile screen.', 'classic-editor' ); ?></p>
-			<p>
-			<input type="checkbox" name="classic-editor-allow-users" id="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
-			<label for="classic-editor-allow-users">
-			<?php _e( 'Let each user choose their settings.', 'classic-editor' ); ?>
-			</label>
-			</p>
-			<?php
-		}
-
-		?>
-		<script>
-		jQuery( 'document' ).ready( function( $ ) {
-			var checkbox = $( '#classic-editor-remember' );
-			var isChecked = checkbox.prop( 'checked' );
-
-			if ( window.location.hash === '#classic-editor-options' ) {
-				$( '#classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
-			}
-			$( 'input[type="radio"][name="classic-editor-replace"]' ).on( 'change', function( event ) {
-				if ( $( event.target ).val() === 'replace' ) {
-					checkbox.prop({ checked: false, disabled: true });
-				} else {
-					checkbox.prop({ checked: isChecked, disabled: false });
-				}
-			});
-		} );
-		</script>
-		</div>
-		<?php
-
-		if ( ! $site_wide ) {
-			?>
-			</td>
+				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
+				<td>
+				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
+				<?php self::settings_1(); ?>
+				</td>
 			</tr>
-			</table>
-			<?php
-		}
+			<tr>
+				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
+				<td>
+				<?php self::settings_2(); ?>
+				</td>
+			</tr>
+		</table>
+		<?php
 	}
 
 	public static function notice_after_upgrade() {
@@ -674,7 +607,11 @@ class Classic_Editor {
 			true
 		);
 
-		wp_localize_script( 'classic-editor-add-submenu', 'classicEditorPluginL10n', array( 'linkText' => __( 'Switch to Classic Editor' ) ) );
+		wp_localize_script(
+			'classic-editor-add-submenu',
+			'classicEditorPluginL10n',
+			array( 'linkText' => __( 'Switch to Classic Editor', 'classic-editor' ) )
+		);
 	}
 
 	/**
