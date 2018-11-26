@@ -28,40 +28,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
+	const plugin_version = 1.0;
+	private static $settings;
 
 	private function __construct() {}
 
 	public static function init_actions() {
-		$gutenberg = false;
-		$block_editor = false;
-		$post_id = 0;
+		if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '<' ) ) {
+			return; // Nothing to do :)
+		}
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
 
-		// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
-		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
-
 		// Show warning on the post-upgrade screen (about.php).
-		add_action( 'all_admin_notices', array( __CLASS__, 'post_upgrade_notice' ) );
+		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 
 		// Move the Privacy Page notice back under the title.
 		add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
-
-		if ( has_filter( 'replace_editor', 'gutenberg_init' ) ) {
-			// Gutenberg is installed and activated.
-			$gutenberg = true;
-			$post_id = self::get_edited_post_id();
-		}
-
-		if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' ) ) {
-			// Block editor.
-			$block_editor = true;
-		}
-
-		if ( ! $gutenberg && ! $block_editor ) {
-			return; // Nothing to do :)
-		}
 
 		$settings = self::get_settings();
 
@@ -72,94 +56,13 @@ class Classic_Editor {
 
 			// User settings.
 			add_action( 'personal_options_update', array( __CLASS__, 'save_user_settings' ) );
-			add_action( 'profile_personal_options', array( __CLASS__, 'settings' ) );
+			add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
 		}
 
-		if ( $block_editor && $settings['replace'] ) {
+		if ( $settings['replace'] ) {
 			// Consider disabling other block editor functionality.
 			add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
-		}
-
-		if ( $gutenberg && ( $settings['replace'] || self::is_classic( $post_id ) ) ) {
-			// gutenberg.php
-			remove_action( 'admin_menu', 'gutenberg_menu' );
-			remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
-			remove_action( 'admin_notices', 'gutenberg_wordpress_version_notice' );
-			remove_action( 'admin_init', 'gutenberg_redirect_demo' );
-
-			remove_filter( 'replace_editor', 'gutenberg_init' );
-
-			// lib/client-assets.php
-			remove_action( 'wp_enqueue_scripts', 'gutenberg_register_scripts_and_styles', 5 );
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_register_scripts_and_styles', 5 );
-			remove_action( 'wp_enqueue_scripts', 'gutenberg_common_scripts_and_styles' );
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_common_scripts_and_styles' );
-
-			// lib/compat.php
-			remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
-			remove_action( 'admin_notices', 'gutenberg_show_privacy_policy_help_text' );
-
-			// lib/rest-api.php
-			remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
-			remove_action( 'rest_api_init', 'gutenberg_add_taxonomy_visibility_field' );
-
-			remove_filter( 'rest_request_after_callbacks', 'gutenberg_filter_oembed_result' );
-			remove_filter( 'registered_post_type', 'gutenberg_register_post_prepare_functions' );
-			remove_filter( 'register_post_type_args', 'gutenberg_filter_post_type_labels' );
-
-			// lib/meta-box-partial-page.php
-			remove_action( 'do_meta_boxes', 'gutenberg_meta_box_save', 1000 );
-			remove_action( 'submitpost_box', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'submitpage_box', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'edit_page_form', 'gutenberg_intercept_meta_box_render' );
-			remove_action( 'edit_form_advanced', 'gutenberg_intercept_meta_box_render' );
-
-			remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
-			remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
-		}
-
-		if ( $gutenberg && $settings['replace'] ) {
-			// gutenberg.php
-			remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
-			remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
-
-			remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
-			remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
-
-			// Keep
-			// remove_filter( 'wp_kses_allowed_html', 'gutenberg_kses_allowedtags', 10, 2 ); // not needed in 5.0
-			// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
-
-			// lib/compat.php
-			remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
-
-			// lib/register.php
-			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
-
-			remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
-			remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
-			remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
-			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
-
-			// lib/plugin-compat.php
-			remove_filter( 'rest_pre_insert_post', 'gutenberg_remove_wpcom_markdown_support' );
-
-			// Keep
-
-			// lib/blocks.php
-			// remove_filter( 'the_content', 'do_blocks', 9 );
-
-			// Continue to disable wpautop inside TinyMCE for posts that were started in Gutenberg.
-			// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
-
-			// Keep the tweaks to the PHP wpautop.
-			// add_filter( 'the_content', 'wpautop' );
-			// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
-
-			// remove_action( 'init', 'gutenberg_register_post_types' );
-		}
-
-		if ( ! $settings['replace'] ) {
+		} else {
 			// Menus
 			add_action( 'admin_menu', array( __CLASS__, 'add_submenus' ) );
 
@@ -171,6 +74,10 @@ class Classic_Editor {
 			add_filter( 'use_block_editor_for_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 			add_filter( 'redirect_post_location', array( __CLASS__, 'redirect_location' ) );
 			add_action( 'edit_form_top', array( __CLASS__, 'add_field' ) );
+			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
+
+			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309
+			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
 
 			if ( $settings['remember'] ) {
 				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic' ) );
@@ -179,7 +86,7 @@ class Classic_Editor {
 		}
 	}
 
-	private static function get_settings() {
+	private static function get_settings( $update = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings and hide the settings UI.
 		 *
@@ -201,6 +108,10 @@ class Classic_Editor {
 				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ),
 				'hide-settings-ui' => true,
 			);
+		}
+
+		if ( ! empty( self::$settings ) && $update === 'no' ) {
+			return self::$settings;
 		}
 
 		$use_defaults = true;
@@ -226,15 +137,17 @@ class Classic_Editor {
 
 		if ( $use_defaults ) {
 			$replace = get_option( 'classic-editor-replace' ) !== 'no-replace';
-			$remember = get_option( 'classic-editor-remember' ) === 'remember';
+			$remember = ( ! $replace && get_option( 'classic-editor-remember' ) === 'remember' );
 		}
 
-		return array(
+		self::$settings = array(
 			'replace' => $replace,
 			'remember' => $remember,
 			'hide-settings-ui' => false,
 			'allow-users' => get_option( 'classic-editor-allow-users' ) !== 'disallow',
 		);
+
+		return self::$settings;
 	}
 
 	private static function is_classic( $post_id = 0 ) {
@@ -291,7 +204,9 @@ class Classic_Editor {
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		add_settings_field( 'classic-editor', __( 'Classic Editor settings', 'classic-editor' ), array( __CLASS__, 'settings' ), 'writing' );
+		add_settings_field( 'classic-editor-1', __( 'Default editor for all users', 'classic-editor' ), array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-2', __( 'Open the last editor used for each post', 'classic-editor' ), array( __CLASS__, 'settings_2' ), 'writing' );
+		add_settings_field( 'classic-editor-3', __( 'Allow users to switch editors', 'classic-editor' ), array( __CLASS__, 'settings_3' ), 'writing' );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -310,7 +225,6 @@ class Classic_Editor {
 
 			if ( $value === 'no-replace' && $_POST['classic-editor-remember'] === 'remember' ) {
 				$value = 'remember';
-
 			}
 
 			update_user_option( $user_id, 'classic-editor-settings', $value );
@@ -336,116 +250,114 @@ class Classic_Editor {
 		return 'disallow';
 	}
 
-	/**
-	 * Output HTML for the settings.
-	 */
-	public static function settings() {
-		global $user_can_edit;
-		$settings = self::get_settings();
-
-		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
-			if ( ! $user_can_edit || ! $settings['allow-users'] ) {
-				// Show these options to "author" and above, same as the "Disable the Visual editor when writing" checkbox.
-				return;
-			}
-
-			$site_wide = false;
-		} else {
-			 $site_wide = true;
-		}
-
-
-		$disabled = $settings['replace'] ? ' disabled' : '';
-
-		if ( ! $site_wide ) {
-			?>
-			<table class="form-table">
-			<tr>
-			<th scope="row"><?php _e( 'Classic Editor settings', 'classic-editor' ); ?></th>
-			<td>
-			<?php
-
-			wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' );
-		}
+	public static function settings_1() {
+		$settings = self::get_settings( 'update' );
 
 		?>
-		<div id="classic-editor-options" style="margin: 0;">
-		<?php
-
-		if ( $site_wide ) {
-			?>
-			<h4 style="margin: 0.4em 0 0.7em;"><?php _e( 'Default site-wide options', 'classic-editor' ); ?></h4>
-			<?php
-		}
-
-		?>
-		<p>
-		<input type="radio" name="classic-editor-replace" id="classic-editor-replace" value="replace"<?php if ( $settings['replace'] ) echo ' checked'; ?> />
-		<label for="classic-editor-replace">
-		<?php _e( 'Replace the Block editor with the Classic editor.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<p>
-		<input type="radio" name="classic-editor-replace" id="classic-editor-no-replace" value="no-replace"<?php if ( ! $settings['replace'] ) echo ' checked'; ?> />
-		<label for="classic-editor-no-replace">
-		<?php _e( 'Use the Block editor by default and include optional links back to the Classic editor.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<p>
-		<input type="checkbox" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( $settings['remember'] ) echo ' checked'; ?> />
-		<label for="classic-editor-remember">
-		<?php _e( 'Remember whether the Block or the Classic editor was used for each post and open the same editor next time.', 'classic-editor' ); ?>
-		</label>
-		</p>
-
-		<?php
-
-		if ( $site_wide ) {
-			?>
-			<h4 style="margin-bottom: 0.7em;"><?php _e( 'Admin options', 'classic-editor' ); ?></h4>
-			<p class="help"><?php _e( 'When enabled each user can set their personal preferences on the User Profile screen.', 'classic-editor' ); ?></p>
-			<p>
-			<input type="checkbox" name="classic-editor-allow-users" id="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
-			<label for="classic-editor-allow-users">
-			<?php _e( 'Let each user choose their settings.', 'classic-editor' ); ?>
+		<div class="classic-editor-options">
+			<label for="classic-editor-replace" class="screen-reader-text">
+				<?php _e( 'Select default editor for all users', 'classic-editor' ); ?>
 			</label>
-			</p>
-			<?php
-		}
+			<select name="classic-editor-replace" id="classic-editor-replace">
+				<option value="no-replace"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
+				<option value="replace"<?php if ( $settings['replace'] ) echo ' selected'; ?>><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
+			</select>
+			<!--<p class="help"><?php _e( 'Includes optional links back to the Classic editor when the Block editor is selected.', 'classic-editor' ); ?></p>-->
+		</div>
+		<?php
+	}
+
+	public static function settings_2() {
+		$settings = self::get_settings( 'update' );
+		$disabled = $settings['replace'] ? ' disabled' : '';
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( ! $disabled && $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" id="classic-editor-no-remember" value="no-remember"<?php echo $disabled; if ( ! $disabled && ! $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
-			var checkbox = $( '#classic-editor-remember' );
-			var isChecked = checkbox.prop( 'checked' );
+			var select = $( '#classic-editor-replace' );
 
 			if ( window.location.hash === '#classic-editor-options' ) {
-				$( '#classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
+				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
 			}
-			$( 'input[type="radio"][name="classic-editor-replace"]' ).on( 'change', function( event ) {
-				if ( $( event.target ).val() === 'replace' ) {
-					checkbox.prop({ checked: false, disabled: true });
+			select.on( 'change', function() {
+				if ( select.find( ':selected' ).val() === 'replace' ) {
+					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
 				} else {
-					checkbox.prop({ checked: isChecked, disabled: false });
+					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
 				}
 			});
 		} );
 		</script>
-		</div>
 		<?php
-
-		if ( ! $site_wide ) {
-			?>
-			</td>
-			</tr>
-			</table>
-			<?php
-		}
 	}
 
-	public static function post_upgrade_notice() {
+	public static function settings_3() {
+		$settings = self::get_settings( 'update' );
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
+
+		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-allow-users" id="classic-editor-no-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Shown on the Profile page when allowed by admin.
+	 */
+	public static function user_settings() {
+		global $user_can_edit;
+		$settings = self::get_settings( 'update' );
+
+		if (
+			! defined( 'IS_PROFILE_PAGE' ) ||
+			! IS_PROFILE_PAGE ||
+			! $user_can_edit ||
+			! $settings['allow-users']
+		) {
+			return;
+		}
+
+		?>
+		<table class="form-table">
+			<tr>
+				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
+				<td>
+				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
+				<?php self::settings_1(); ?>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
+				<td>
+				<?php self::settings_2(); ?>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	public static function notice_after_upgrade() {
 		global $pagenow;
 		$settings = self::get_settings();
 
@@ -457,15 +369,15 @@ class Classic_Editor {
 		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
 
 		if ( $settings['allow-users'] && current_user_can( 'edit_posts' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sCalssic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
 		} elseif ( current_user_can( 'manage_options' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sCalssic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
 		?>
-		<div id="message" class="error notice" style="display: block !important"><p>
-			<?php echo $message; ?>
-		</p></div>
+		<div id="message" class="error notice" style="display: block !important">
+			<p><?php echo $message; ?></p>
+		</div>
 		<?php
 	}
 
@@ -542,6 +454,70 @@ class Classic_Editor {
 		return $url;
 	}
 
+	public static function add_meta_box( $post_type, $post ) {
+		if ( ! self::is_classic( $post->ID ) || ! use_block_editor_for_post_type( $post_type ) ) {
+			return;
+		}
+
+		$id = 'classic-editor-switch-editor';
+		$title = __( 'Editor', 'classic-editor' );
+		$callback = array( __CLASS__, 'do_meta_box' );
+		$args = array(
+			'__back_compat_meta_box' => true,
+	    );
+
+		add_meta_box( $id, $title, $callback, null, 'side', 'default', $args );
+	}
+
+	public static function do_meta_box( $post ) {
+		$edit_url = get_edit_post_link( $post->ID, 'raw' );
+		$settings = self::get_settings();
+
+		$edit_url = remove_query_arg( 'classic-editor', $edit_url );
+
+		if ( $settings['remember'] ) {
+			// Forget the previous value when going to a specific editor.
+			$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
+		}
+
+		?>
+		<p>
+			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select editor' ); ?></label>
+			<select id="classic-editor-switch-editor" style="width: 100%;max-width: 20em;">
+				<option value=""><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
+				<option value="" data-url="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
+			</select>
+		</p>
+		<script>
+		jQuery( 'document' ).ready( function( $ ) {
+			var $select = $( '#classic-editor-switch-editor' );
+			$select.on( 'change', function( event ) {
+				var url = $select.find( ':selected' ).attr( 'data-url' );
+				if ( url ) {
+					document.location = url;
+				}
+			} );
+		} );
+		</script>
+		<?php
+	}
+
+	public static function enqueue_scripts() {
+		wp_enqueue_script(
+			'classic-editor-add-submenu',
+			plugins_url( 'js/block-editor-plugin.js', __FILE__ ),
+			array( 'wp-element', 'wp-components', 'lodash' ),
+			self::plugin_version,
+			true
+		);
+
+		wp_localize_script(
+			'classic-editor-add-submenu',
+			'classicEditorPluginL10n',
+			array( 'linkText' => __( 'Switch to Classic Editor', 'classic-editor' ) )
+		);
+	}
+
 	/**
 	 * Add an `Add New (Classic)` submenu for Posts, Pages, etc.
 	 */
@@ -566,31 +542,9 @@ class Classic_Editor {
 				$parent_slug = $type_obj->show_in_menu;
 			}
 
-			$item_name = $type_obj->labels->add_new . ' ' . __( ' (Classic editor)', 'classic-editor' );
+			$item_name = $type_obj->labels->add_new . ' ' . __( '(Classic)', 'classic-editor' );
 			$path = "post-new.php?post_type={$type}&classic-editor";
 			add_submenu_page( $parent_slug, $type_obj->labels->add_new, $item_name, $type_obj->cap->edit_posts, $path );
-
-			// Add "Edit in Classic editor" and "Edit in Block editor" submenu items.
-			$post_id = self::get_edited_post_id();
-
-			if ( $post_id && get_post_type( $post_id ) === $type ) {
-				$edit_url = "post.php?post={$post_id}&action=edit";
-				$settings = self::get_settings();
-
-				if ( $settings['remember'] ) {
-					// Forget the previous value when going to a specific editor.
-					$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
-				}
-
-				// Block editor.
-				$name = __( 'Edit in Block editor', 'classic-editor' );
-				add_submenu_page( $parent_slug, $type_obj->labels->edit_item, $name, $type_obj->cap->edit_posts, $edit_url );
-
-				// Classic editor.
-				$name = __( 'Edit in Classic editor', 'classic-editor' );
-				$url = add_query_arg( 'classic-editor', '', $edit_url );
-				add_submenu_page( $parent_slug, $type_obj->labels->edit_item, $name, $type_obj->cap->edit_posts, $url );
-			}
 		}
 	}
 
