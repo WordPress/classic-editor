@@ -34,9 +34,7 @@ class Classic_Editor {
 	private function __construct() {}
 
 	public static function init_actions() {
-		if ( version_compare( $GLOBALS['wp_version'], '5.0-beta', '<' ) ) {
-			return; // Nothing to do :)
-		}
+		$supported_wp_version = version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' );
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
@@ -50,16 +48,25 @@ class Classic_Editor {
 		$settings = self::get_settings();
 
 		if ( ! $settings['hide-settings-ui'] ) {
-			// Show the plugin's settings, and the link to them in the plugins list table.
+			// Show the plugin's admin settings, and the link to them in the plugins list table.
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
-			// User settings.
-			add_action( 'personal_options_update', array( __CLASS__, 'save_user_settings' ) );
-			add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
+			if ( $supported_wp_version ) {
+				// User settings.
+				add_action( 'personal_options_update', array( __CLASS__, 'save_user_settings' ) );
+				add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
+			}
 		}
 
-		if ( $settings['replace'] ) {
+		if ( ! $supported_wp_version ) {
+			// TODO: Should we also show a notice that the settings will apply after WordPress is upgraded to 5.0+?
+			return;
+		}
+
+		if ( $settings['editor'] === 'block' ) {
+			return; // Nothing else to do :)
+		} elseif ( $settings['editor'] === 'classic' ) {
 			// Consider disabling other block editor functionality.
 			add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
 		} else {
@@ -86,13 +93,13 @@ class Classic_Editor {
 		}
 	}
 
-	private static function get_settings( $update = 'no' ) {
+	private static function get_settings( $refresh = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings and hide the settings UI.
 		 *
-		 * Has to return an associative array with (up to) three keys with boolean values.
+		 * Has to return an associative array with three keys.
 		 * The defaults are:
-		 *   'replace' => true,
+		 *   'editor' => 'classic', // Accepted values: 'classic', 'block', 'both'.
 		 *   'remember' => false,
 		 *   'allow_users' => true,
 		 *
@@ -102,49 +109,69 @@ class Classic_Editor {
 
 		if ( is_array( $settings ) ) {
 			// Normalize...
+			$editor = 'classic';
+
+			if ( $settings['editor'] === 'block' || $settings['editor'] === 'both' ) {
+				$editor = $settings['editor'];
+			}
+
 			return array(
-				'replace' => ! empty( $settings['replace'] ),
-				'remember' => ( empty( $settings['replace'] ) && ! empty( $settings['remember'] ) ),
-				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ),
+				'editor' => $editor,
+				'remember' => ( $editor === 'both' && ! empty( $settings['remember'] ) ),
+				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ), // Allow by default.
 				'hide-settings-ui' => true,
 			);
 		}
 
-		if ( ! empty( self::$settings ) && $update === 'no' ) {
+		if ( ! empty( self::$settings ) && $refresh === 'no' ) {
 			return self::$settings;
 		}
 
 		$use_defaults = true;
-		$replace = true;
+		$editor = 'classic';
 		$remember = false;
+		$allow_users = get_option( 'classic-editor-allow-users' ) !== 'disallow';
 
-		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && get_option( 'classic-editor-allow-users' ) !== 'disallow' ) {
-			$user_id = 0;  // Allow admins to set a user's options?
-			$option = get_user_option( 'classic-editor-settings', $user_id );
+		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
+			$option = get_user_option( 'classic-editor-settings' );
 
 			if ( ! empty( $option ) ) {
 				$use_defaults = false;
 
-				if ( $option === 'remember' ) {
-					$remember = true;
-					$replace = false;
+				if ( $option === 'block' ) {
+					$editor = 'block';
+				} elseif ( $option === 'classic' || $option === 'replace' ) {
+					$editor = 'classic';
+				} elseif ( $option === 'both' || $option === 'remember' || $option === 'no-replace' ) {
+					$editor = 'both';
+					$remember = ( $option === 'remember' );
 				} else {
-					$remember = false;
-					$replace = ( $option !== 'no-replace' );
+					$use_defaults = true;
 				}
 			}
 		}
 
 		if ( $use_defaults ) {
-			$replace = get_option( 'classic-editor-replace' ) !== 'no-replace';
-			$remember = ( ! $replace && get_option( 'classic-editor-remember' ) === 'remember' );
+			$option = get_option( 'classic-editor-replace' );
+
+			// Normalize old options.
+			if ( $option === 'block' ) {
+				$editor = 'block';
+			} elseif (  $option === 'both' || $option === 'no-replace' ) {
+				$editor = 'both';
+			} else {
+				// `empty( $option ) || $option === 'classic' || $option === 'replace'`.
+				$editor = 'classic';
+			}
+
+			$remember = ( $editor === 'both' && get_option( 'classic-editor-remember' ) === 'remember' );
 		}
 
 		self::$settings = array(
-			'replace' => $replace,
+			'editor' => $editor,
 			'remember' => $remember,
 			'hide-settings-ui' => false,
-			'allow-users' => get_option( 'classic-editor-allow-users' ) !== 'disallow',
+			'allow-users' => $allow_users,
 		);
 
 		return self::$settings;
@@ -189,24 +216,28 @@ class Classic_Editor {
 	public static function register_settings() {
 		// Add an option to Settings -> Writing
 		register_setting( 'writing', 'classic-editor-replace', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_options' ),
+			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
 		) );
 
 		register_setting( 'writing', 'classic-editor-remember', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_options' ),
+			'sanitize_callback' => array( __CLASS__, 'validate_option_remember' ),
 		) );
 
 		register_setting( 'writing', 'classic-editor-allow-users', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_options_allow_users' ),
+			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
 		) );
 
 		add_option_whitelist( array(
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		add_settings_field( 'classic-editor-1', __( 'Default editor for all users', 'classic-editor' ), array( __CLASS__, 'settings_1' ), 'writing' );
-		add_settings_field( 'classic-editor-2', __( 'Open the last editor used for each post', 'classic-editor' ), array( __CLASS__, 'settings_2' ), 'writing' );
-		add_settings_field( 'classic-editor-3', __( 'Allow users to switch editors', 'classic-editor' ), array( __CLASS__, 'settings_3' ), 'writing' );
+		$headint_1 = __( 'Default editor for all users', 'classic-editor' );
+		$heading_2 = __( 'When using both editors open the last editor used for each post', 'classic-editor' );
+		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
+
+		add_settings_field( 'classic-editor-1', $headint_1, array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -221,9 +252,9 @@ class Classic_Editor {
 				return;
 			}
 
-			$value = self::validate_options( $_POST['classic-editor-replace'] );
+			$value = self::validate_option_editor( $_POST['classic-editor-replace'] );
 
-			if ( $value === 'no-replace' && $_POST['classic-editor-remember'] === 'remember' ) {
+			if ( $value === 'both' && $_POST['classic-editor-remember'] === 'remember' ) {
 				$value = 'remember';
 			}
 
@@ -234,15 +265,23 @@ class Classic_Editor {
 	/**
 	 * Validate
 	 */
-	public static function validate_options( $value ) {
-		if ( $value === 'no-replace' || $value === 'remember' ) {
+	public static function validate_option_editor( $value ) {
+		if ( $value === 'block' || $value === 'both' ) {
 			return $value;
 		}
 
-		return 'replace';
+		return 'classic';
 	}
 
-	public static function validate_options_allow_users( $value ) {
+	public static function validate_option_remember( $value ) {
+		if ( $value === 'remember' ) {
+			return 'remember';
+		}
+
+		return 'no-remember';
+	}
+
+	public static function validate_option_allow_users( $value ) {
 		if ( $value === 'allow' ) {
 			return 'allow';
 		}
@@ -251,25 +290,37 @@ class Classic_Editor {
 	}
 
 	public static function settings_1() {
-		$settings = self::get_settings( 'update' );
+		$settings = self::get_settings( 'refresh' );
+
+		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
+			$label = __( 'Select editor.', 'classic-editor' );
+		} else {
+			$label = __( 'Select default editor for all users.', 'classic-editor' );
+		}
 
 		?>
 		<div class="classic-editor-options">
 			<label for="classic-editor-replace" class="screen-reader-text">
-				<?php _e( 'Select default editor for all users', 'classic-editor' ); ?>
+				<?php echo $label; ?>
 			</label>
 			<select name="classic-editor-replace" id="classic-editor-replace">
-				<option value="no-replace"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
-				<option value="replace"<?php if ( $settings['replace'] ) echo ' selected'; ?>><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
+				<option value="classic">
+					<?php _e( 'Classic Editor', 'classic-editor' ); ?>
+				</option>
+				<option value="block"<?php if ( $settings['editor'] === 'block' ) echo ' selected'; ?>>
+					<?php _e( 'Block Editor', 'classic-editor' ); ?>
+				</option>
+				<option value="both"<?php if ( $settings['editor'] === 'both' ) echo ' selected'; ?>>
+					<?php _e( 'Both Editors', 'classic-editor' ); ?>
+				</option>
 			</select>
-			<!--<p class="help"><?php _e( 'Includes optional links back to the Classic editor when the Block editor is selected.', 'classic-editor' ); ?></p>-->
 		</div>
 		<?php
 	}
 
 	public static function settings_2() {
-		$settings = self::get_settings( 'update' );
-		$disabled = $settings['replace'] ? ' disabled' : '';
+		$settings = self::get_settings();
+		$disabled = $settings['editor'] !== 'both' ? ' disabled' : '';
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
@@ -292,10 +343,10 @@ class Classic_Editor {
 				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
 			}
 			select.on( 'change', function() {
-				if ( select.find( ':selected' ).val() === 'replace' ) {
-					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
-				} else {
+				if ( select.find( ':selected' ).val() === 'both' ) {
 					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
+				} else {
+					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
 				}
 			});
 		} );
@@ -304,7 +355,7 @@ class Classic_Editor {
 	}
 
 	public static function settings_3() {
-		$settings = self::get_settings( 'update' );
+		$settings = self::get_settings( 'refresh' );
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
@@ -348,7 +399,7 @@ class Classic_Editor {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'When using both editors open the last editor used for each post', 'classic-editor' ); ?></th>
 				<td>
 				<?php self::settings_2(); ?>
 				</td>
@@ -361,7 +412,7 @@ class Classic_Editor {
 		global $pagenow;
 		$settings = self::get_settings();
 
-		if ( $pagenow !== 'about.php' || $settings['hide-settings-ui'] || ! $settings['replace'] ) {
+		if ( $pagenow !== 'about.php' || $settings['hide-settings-ui'] || $settings['editor'] !== 'classic' ) {
 			// No need to show when the settings are preset from another plugin or when not replacing the Block Editor.
 			return;
 		}
@@ -623,10 +674,16 @@ class Classic_Editor {
 	}
 
 	public static function on_admin_init() {
+		global $pagenow;
+
+		if ( $pagenow !== 'post.php' ) {
+			return;
+		}
+
 		$settings = self::get_settings();
 		$post_id = self::get_edited_post_id();
 
-		if ( $settings['replace'] || self::is_classic( $post_id ) ) {
+		if ( $post_id && ( $settings['editor'] === 'classic' || self::is_classic( $post_id ) ) ) {
 			// Move the Privacy Policy help notice back under the title field.
 			remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 			add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
@@ -638,7 +695,7 @@ class Classic_Editor {
 	 */
 	public static function activate() {
 		if ( ! get_option( 'classic-editor-replace' ) ) {
-			update_option( 'classic-editor-replace', 'replace' );
+			update_option( 'classic-editor-replace', 'classic' );
 			update_option( 'classic-editor-remember', '' );
 			update_option( 'classic-editor-allow-users', 'allow' );
 		}
@@ -654,6 +711,6 @@ class Classic_Editor {
 	}
 }
 
-add_action( 'plugins_loaded', array( 'Classic_Editor', 'init_actions' ), 20 );
+add_action( 'plugins_loaded', array( 'Classic_Editor', 'init_actions' ) );
 
 endif;
