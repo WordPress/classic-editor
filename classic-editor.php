@@ -52,7 +52,7 @@ class Classic_Editor {
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
-			if ( $supported_wp_version ) {
+			if ( $supported_wp_version && $settings['allow-users'] ) {
 				// User settings.
 				add_action( 'personal_options_update', array( __CLASS__, 'save_user_settings' ) );
 				add_action( 'profile_personal_options', array( __CLASS__, 'user_settings' ) );
@@ -64,15 +64,12 @@ class Classic_Editor {
 			return;
 		}
 
-		if ( $settings['editor'] === 'block' ) {
+		if ( $settings['editor'] === 'block' && ! $settings['allow-users'] ) {
 			return; // Nothing else to do :)
-		} elseif ( $settings['editor'] === 'classic' ) {
+		} elseif ( $settings['editor'] === 'classic' && ! $settings['allow-users'] ) {
 			// Consider disabling other block editor functionality.
 			add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
 		} else {
-			// Menus
-			add_action( 'admin_menu', array( __CLASS__, 'add_submenus' ) );
-
 			// Row actions (edit.php)
 			add_filter( 'page_row_actions', array( __CLASS__, 'add_edit_links' ), 15, 2 );
 			add_filter( 'post_row_actions', array( __CLASS__, 'add_edit_links' ), 15, 2 );
@@ -99,7 +96,7 @@ class Classic_Editor {
 		 *
 		 * Has to return an associative array with three keys.
 		 * The defaults are:
-		 *   'editor' => 'classic', // Accepted values: 'classic', 'block', 'both'.
+		 *   'editor' => 'classic', // Accepted values: 'classic', 'block'.
 		 *   'remember' => false,
 		 *   'allow_users' => true,
 		 *
@@ -111,13 +108,13 @@ class Classic_Editor {
 			// Normalize...
 			$editor = 'classic';
 
-			if ( $settings['editor'] === 'block' || $settings['editor'] === 'both' ) {
-				$editor = $settings['editor'];
+			if ( isset( $settings['editor'] ) && $settings['editor'] === 'block' ) {
+				$editor = 'block';
 			}
 
 			return array(
 				'editor' => $editor,
-				'remember' => ( $editor === 'both' && ! empty( $settings['remember'] ) ),
+				'remember' => ( ! empty( $settings['remember'] ) ),
 				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ), // Allow by default.
 				'hide-settings-ui' => true,
 			);
@@ -127,44 +124,31 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		$use_defaults = true;
-		$editor = 'classic';
-		$remember = false;
-		$allow_users = get_option( 'classic-editor-allow-users' ) !== 'disallow';
+		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
+		$remember = ( get_option( 'classic-editor-remember' ) === 'remember' );
+		$option = get_option( 'classic-editor-replace' );
 
-		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
-			$option = get_user_option( 'classic-editor-settings' );
-
-			if ( ! empty( $option ) ) {
-				$use_defaults = false;
-
-				if ( $option === 'block' ) {
-					$editor = 'block';
-				} elseif ( $option === 'classic' || $option === 'replace' ) {
-					$editor = 'classic';
-				} elseif ( $option === 'both' || $option === 'remember' || $option === 'no-replace' ) {
-					$editor = 'both';
-					$remember = ( $option === 'remember' );
-				} else {
-					$use_defaults = true;
-				}
-			}
+		// Normalize old options.
+		if ( $option === 'block' || $option === 'no-replace' ) {
+			$editor = 'block';
+		} else {
+			// `empty( $option ) || $option === 'classic' || $option === 'replace'`.
+			$editor = 'classic';
 		}
 
-		if ( $use_defaults ) {
-			$option = get_option( 'classic-editor-replace' );
+		// Override the defaults withthe user options.
+		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
+			$user_options = get_user_option( 'classic-editor-settings' );
 
-			// Normalize old options.
-			if ( $option === 'block' ) {
-				$editor = 'block';
-			} elseif (  $option === 'both' || $option === 'no-replace' ) {
-				$editor = 'both';
-			} else {
-				// `empty( $option ) || $option === 'classic' || $option === 'replace'`.
-				$editor = 'classic';
+			if ( is_array( $user_options ) ) {
+				if ( isset( $user_options['remember'] ) ) {
+					$remember = $user_options['remember'] === 'remember';
+				}
+
+				if ( isset( $user_options['editor'] ) && ( $user_options['editor'] === 'block' || $user_options['editor'] === 'classic' ) ) {
+					$editor = $user_options['editor'];
+				}
 			}
-
-			$remember = ( $editor === 'both' && get_option( 'classic-editor-remember' ) === 'remember' );
 		}
 
 		self::$settings = array(
@@ -178,6 +162,10 @@ class Classic_Editor {
 	}
 
 	private static function is_classic( $post_id = 0 ) {
+		if ( ! $post_id ) {
+			$post_id = self::get_edited_post_id();
+		}
+
 		if ( $post_id ) {
 			$settings = self::get_settings();
 
@@ -199,6 +187,9 @@ class Classic_Editor {
 		return false;
 	}
 
+	/**
+	 * Early get the edited post ID when loading the Edit Post screen.
+	 */
 	private static function get_edited_post_id() {
 		if (
 			! empty( $_GET['post'] ) &&
@@ -232,7 +223,7 @@ class Classic_Editor {
 		) );
 
 		$headint_1 = __( 'Default editor for all users', 'classic-editor' );
-		$heading_2 = __( 'When using both editors open the last editor used for each post', 'classic-editor' );
+		$heading_2 = __( 'Open the last editor used for each post', 'classic-editor' );
 		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
 
 		add_settings_field( 'classic-editor-1', $headint_1, array( __CLASS__, 'settings_1' ), 'writing' );
@@ -252,13 +243,15 @@ class Classic_Editor {
 				return;
 			}
 
-			$value = self::validate_option_editor( $_POST['classic-editor-replace'] );
+			$editor = self::validate_option_editor( $_POST['classic-editor-replace'] );
+			$remember = self::validate_option_remember( $_POST['classic-editor-remember'] );
 
-			if ( $value === 'both' && $_POST['classic-editor-remember'] === 'remember' ) {
-				$value = 'remember';
-			}
+			$options = array(
+				'editor' => $editor,
+				'remember' => $remember,
+			);
 
-			update_user_option( $user_id, 'classic-editor-settings', $value );
+			update_user_option( $user_id, 'classic-editor-settings', $options );
 		}
 	}
 
@@ -266,8 +259,8 @@ class Classic_Editor {
 	 * Validate
 	 */
 	public static function validate_option_editor( $value ) {
-		if ( $value === 'block' || $value === 'both' ) {
-			return $value;
+		if ( $value === 'block' ) {
+			return 'block';
 		}
 
 		return 'classic';
@@ -310,9 +303,6 @@ class Classic_Editor {
 				<option value="block"<?php if ( $settings['editor'] === 'block' ) echo ' selected'; ?>>
 					<?php _e( 'Block Editor', 'classic-editor' ); ?>
 				</option>
-				<option value="both"<?php if ( $settings['editor'] === 'both' ) echo ' selected'; ?>>
-					<?php _e( 'Both Editors', 'classic-editor' ); ?>
-				</option>
 			</select>
 		</div>
 		<?php
@@ -320,7 +310,7 @@ class Classic_Editor {
 
 	public static function settings_2() {
 		$settings = self::get_settings();
-		$disabled = $settings['editor'] !== 'both' ? ' disabled' : '';
+		$disabled = ! $settings['allow-users'] ? ' disabled' : '';
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
@@ -337,13 +327,12 @@ class Classic_Editor {
 		</div>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
-			var select = $( '#classic-editor-replace' );
-
 			if ( window.location.hash === '#classic-editor-options' ) {
 				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
 			}
-			select.on( 'change', function() {
-				if ( select.find( ':selected' ).val() === 'both' ) {
+
+			$( 'input[name="classic-editor-allow-users"]' ).on( 'change', function() {
+				if ( $( this ).val() === 'allow' ) {
 					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
 				} else {
 					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
@@ -361,12 +350,12 @@ class Classic_Editor {
 		?>
 		<div class="classic-editor-options">
 			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+			<input type="radio" name="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
 			<?php _e( 'Yes', 'classic-editor' ); ?>
 			</label>
 
 			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" id="classic-editor-no-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+			<input type="radio" name="classic-editor-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 			<?php _e( 'No', 'classic-editor' ); ?>
 			</label>
 		</div>
@@ -399,7 +388,7 @@ class Classic_Editor {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><?php _e( 'When using both editors open the last editor used for each post', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
 				<td>
 				<?php self::settings_2(); ?>
 				</td>
@@ -443,7 +432,7 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Remember when the Classic editor was used to edit a post.
+	 * Remember when the Classic Editor was used to edit a post.
 	 */
 	public static function remember_classic( $post ) {
 		if ( ! empty( $post->ID ) ) {
@@ -451,6 +440,9 @@ class Classic_Editor {
 		}
 	}
 
+	/**
+	 * Remember when the Block Editor was used to edit a post.
+	 */
 	public static function remember_block_editor( $editor_settings, $post ) {
 		if ( ! empty( $post->ID ) ) {
 			self::remember( $post->ID, 'block-editor' );
@@ -460,17 +452,25 @@ class Classic_Editor {
 	}
 
 	private static function remember( $post_id, $editor ) {
-		if ( use_block_editor_for_post_type( get_post_type( $post_id ) ) ) {
-			if ( get_post_meta( $post_id, 'classic-editor-rememebr', true ) !== $editor ) {
-				update_post_meta( $post_id, 'classic-editor-rememebr', $editor );
-			}
+		if (
+			use_block_editor_for_post_type( get_post_type( $post_id ) ) &&
+			get_post_meta( $post_id, 'classic-editor-rememebr', true ) !== $editor
+		) {
+			update_post_meta( $post_id, 'classic-editor-rememebr', $editor );
 		}
 	}
 
+	/**
+	 * Uses the `use_block_editor_for_post` filter.
+	 * Passes through `$which_editor` for Block Editor (it's sets to `true` but may be changed by another plugin).
+	 * Returns `false` for Classic Editor.
+	 */
 	public static function choose_editor( $which_editor, $post ) {
-		// Open the Block editor when no $post and for "Add New" links.
-		if ( empty( $post->ID ) || ( $post->post_status === 'auto-draft' && ! self::is_classic() ) ) {
-			return $which_editor;
+		$settings = self::get_settings();
+
+		// Open the default editor when no $post and for "Add New" links.
+		if ( empty( $post->ID ) || $post->post_status === 'auto-draft' ) {
+			return $settings['editor'] === 'classic' ? false : $which_editor;
 		}
 
 		if ( self::is_classic( $post->ID ) ) {
@@ -498,7 +498,9 @@ class Classic_Editor {
 	 * Keep the `classic-editor` query arg when looking at revisions.
 	 */
 	public static function get_edit_post_link( $url ) {
-		if ( isset( $_REQUEST['classic-editor'] ) ) {
+		$settings = self::get_settings();
+
+		if ( isset( $_REQUEST['classic-editor'] ) || $settings['editor'] === 'classic' ) {
 			$url = add_query_arg( 'classic-editor', '', $url );
 		}
 
@@ -570,44 +572,13 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Add an `Add New (Classic)` submenu for Posts, Pages, etc.
-	 */
-	public static function add_submenus() {
-		foreach ( get_post_types( array( 'show_ui' => true ) ) as $type ) {
-			$type_obj = get_post_type_object( $type );
-
-			if ( ! $type_obj->show_in_menu || ! use_block_editor_for_post_type( $type ) ) {
-				continue;
-			}
-
-			if ( $type_obj->show_in_menu === true ) {
-				if ( 'post' === $type ) {
-					$parent_slug = 'edit.php';
-				} elseif ( 'page' === $type ) {
-					$parent_slug = 'edit.php?post_type=page';
-				} else {
-					// Not for a submenu.
-					continue;
-				}
-			} else {
-				$parent_slug = $type_obj->show_in_menu;
-			}
-
-			$item_name = $type_obj->labels->add_new . ' ' . __( '(Classic)', 'classic-editor' );
-			$path = "post-new.php?post_type={$type}&classic-editor";
-			add_submenu_page( $parent_slug, $type_obj->labels->add_new, $item_name, $type_obj->cap->edit_posts, $path );
-		}
-	}
-
-	/**
 	 * Add a link to the settings on the Plugins screen.
 	 */
 	public static function add_settings_link( $links, $file ) {
 		$settings = self::get_settings();
 
 		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
-			$settings_link = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
-			array_unshift( $links, $settings_link );
+			(array) $links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
 		}
 
 		return $links;
@@ -615,12 +586,12 @@ class Classic_Editor {
 
 	/**
 	 * Adds links to the post/page screens to edit any post or page in
-	 * the Classic editor.
+	 * the Classic or Block editor.
 	 *
 	 * @param  array   $actions Post actions.
 	 * @param  WP_Post $post    Edited post.
 	 *
-	 * @return array   Updated post actions.
+	 * @return array Updated post actions.
 	 */
 	public static function add_edit_links( $actions, $post ) {
 		// This is in Gutenberg, don't duplicate it.
@@ -649,10 +620,11 @@ class Classic_Editor {
 		$title = _draft_or_post_title( $post->ID );
 
 		// Link to the Block editor.
+		$url = remove_query_arg( 'classic-editor', $edit_url );
 		$text = __( 'Block editor', 'classic-editor' );
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block editor', 'classic-editor' ), $title );
-		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $edit_url ), esc_attr( $label ), $text );
+		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		// Link to the Classic editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
