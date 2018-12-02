@@ -87,6 +87,7 @@ class Classic_Editor {
 			if ( $settings['remember'] ) {
 				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic' ) );
 				add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+				add_filter( 'display_post_states', array( __CLASS__, 'add_post_state' ), 10, 2 );
 			}
 		}
 	}
@@ -151,6 +152,9 @@ class Classic_Editor {
 				}
 			}
 		}
+
+		// See https://github.com/WordPress/classic-editor/issues/15
+		$remember = true;
 
 		self::$settings = array(
 			'editor' => $editor,
@@ -228,7 +232,10 @@ class Classic_Editor {
 		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
 
 		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
-		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+
+		// See https://github.com/WordPress/classic-editor/issues/15
+		// add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+
 		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
 	}
 
@@ -379,12 +386,15 @@ class Classic_Editor {
 				<?php self::settings_1(); ?>
 				</td>
 			</tr>
+			<?php // See https://github.com/WordPress/classic-editor/issues/15 ?>
+			<?php if ( false ) : ?>
 			<tr>
 				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
 				<td>
 				<?php self::settings_2(); ?>
 				</td>
 			</tr>
+			<?php endif; ?>
 		</table>
 		<?php
 	}
@@ -635,6 +645,29 @@ class Classic_Editor {
 		array_splice( $actions, $edit_offset, 1, $edit_actions );
 
 		return $actions;
+	}
+
+	/**
+	 * Show the editor that will be used in a "post state" in the Posts list table.
+	 */
+	public static function add_post_state( $post_states, $post ) {
+		$settings = self::get_settings();
+
+		if ( ! $settings['remember'] ) {
+			return $post_states;
+		}
+
+		$last_editor = get_post_meta( $post->ID, 'classic-editor-rememebr', true );
+
+		if ( $last_editor ) {
+			$is_classic = ( $last_editor === 'classic-editor' );
+		} else {
+			$is_classic = ( $settings['editor'] === 'classic' );
+		}
+
+		$post_states[] = $is_classic ? __( 'Classic Editor', 'classic-editor' ) : __( 'Block Editor', 'classic-editor' );
+
+		return $post_states;
 	}
 
 	public static function on_admin_init() {
