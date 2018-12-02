@@ -1,30 +1,63 @@
-<?php
+<?php 
 /**
  * Classic Editor
  *
  * Plugin Name: Classic Editor
- * Plugin URI:  https://wordpress.org
- * Description: Enables the WordPress classic editor and the old-style Edit Post screen layout (TinyMCE, meta boxes, etc.). Supports the older plugins that extend this screen.
- * Version:     1.0-beta
+ * Plugin URI:  https://wordpress.org/plugins/classic-editor/
+ * Description: Enables the WordPress Classic Editor the old-style edit screen layout (TinyMCE, Meta Boxes, etc...) and support the add-ons that extend it.
+ * Version:     1.0.0-beta
  * Author:      WordPress Contributors
- * License:     GPL-2.0+
+ * Author URI:  https://github.com/WordPress/classic-editor/
+ * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
- *
+ * Network:     true
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
- * General Public License version 2, as published by the Free Software Foundation.  You may NOT assume
+ * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
  * that you can use any other version of the GPL.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
+ * Tweaked Build 2018-12-02 based on latest GitHub code -- see all # TWEAK (tag description) for the changes
+ *
+ * Tweaks description:
+ *
+ * - Concise plugin description (detailed plugin guidelines not allow more of 151 characters)
+ * - Use of use Semantic Versioning MAJOR.MINOR.PATCH 1.0.0-beta instead 1.0-beta
+ * - Corrected license spacing
+ * - Network support (multisite)
+ * - Secureds ABSPATH code
+ * - Corrected capitalization for Block Editor and Classic Editor
+ * - Removes redundant words to maintain description in the same line
+ * - Corrects the case where the plugin updates lose and delete user-defined custom settings
+ * - Corrects the case where the plugin deactivation lose and delete user-defined custom settings
+ *
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	die( 'Invalid request.' );
-}
+defined( 'ABSPATH' ) || die( 'Invalid request.' ); # TWEAK: alternative code more secure?
+
+if ( ! defined( 'PLUGIN_CLASSIC_EDITOR_BUILD' ) ) define( 'PLUGIN_CLASSIC_EDITOR_BUILD', '2018-12-02' );
+
+ //if ( ! defined( 'ABSPATH' ) ) {
+//	die( 'Invalid request.' );
+//}
+
+	add_filter( 'plugin_row_meta', 'classic_editor_adds_row_meta_build', 10, 4 ); # TWEAK: only for development version?
+
+	/**
+	 * Adds Plugin Row Meta Build and Language.
+	 */
+	function classic_editor_adds_row_meta_build( $plugin_meta, $plugin_file ) {
+		if ( $plugin_file == plugin_basename( __FILE__ ) )
+			{
+				$plugin_meta[ 0 ] .= ' | ' . __( 'Build',  'classic-editor' ) . ' ' . date_i18n( get_option( 'date_format' ), strtotime( PLUGIN_CLASSIC_EDITOR_BUILD ) );
+				$plugin_meta[ 0 ] .= ' | ' . __( 'Language', 'classic-editor' ) . ' ' . get_locale();
+			}
+		return $plugin_meta;
+	}
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
@@ -38,8 +71,9 @@ class Classic_Editor {
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
+		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) ); # TWEAK: preserve cutom user settings when plugin is updated or deactivated but not deleted
 
-		// Show warning on the post-upgrade screen (about.php).
+		// Show warning on the "What's New" screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 
 		// Move the Privacy Page notice back under the title.
@@ -48,7 +82,7 @@ class Classic_Editor {
 		$settings = self::get_settings();
 
 		if ( ! $settings['hide-settings-ui'] ) {
-			// Show the plugin's admin settings, and the link to them in the plugins list table.
+			// Show the plugin's admin settings, and a link to them in the plugins list table.
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
@@ -60,14 +94,15 @@ class Classic_Editor {
 		}
 
 		if ( ! $supported_wp_version ) {
-			// TODO: Should we also show a notice that the settings will apply after WordPress is upgraded to 5.0+?
+			// For unsupported versions (less than 5.0), only show the admin settings.
+			// That will let admins to install the plugin and to configure it before upgrading WordPress.
 			return;
 		}
 
 		if ( $settings['editor'] === 'block' && ! $settings['allow-users'] ) {
 			return; // Nothing else to do :)
 		} elseif ( $settings['editor'] === 'classic' && ! $settings['allow-users'] ) {
-			// Consider disabling other block editor functionality.
+			// Consider disabling other Block Editor functionality.
 			add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
 		} else {
 			// Row actions (edit.php)
@@ -86,6 +121,7 @@ class Classic_Editor {
 			if ( $settings['remember'] ) {
 				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic' ) );
 				add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+				add_filter( 'display_post_states', array( __CLASS__, 'add_post_state' ), 10, 2 );
 			}
 		}
 	}
@@ -124,7 +160,7 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
+		$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
 		$remember = ( get_option( 'classic-editor-remember' ) === 'remember' );
 		$option = get_option( 'classic-editor-replace' );
 
@@ -151,6 +187,9 @@ class Classic_Editor {
 			}
 		}
 
+		// See https://github.com/WordPress/classic-editor/issues/15
+		$remember = true;
+
 		self::$settings = array(
 			'editor' => $editor,
 			'remember' => $remember,
@@ -171,7 +210,7 @@ class Classic_Editor {
 
 			if ( $settings['remember'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
-				// The editor choice will be remembered when the post is opened in either Classic or Block editor.
+				// The editor choice will be "remembered" when the post is opened in either Classic Editor or Block Editor.
 				if ( 'classic-editor' === $which ) {
 					return true;
 				} elseif ( 'block-editor' === $which ) {
@@ -188,7 +227,7 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Early get the edited post ID when loading the Edit Post screen.
+	 * Get the edited post ID (early) when loading the Edit Post screen.
 	 */
 	private static function get_edited_post_id() {
 		if (
@@ -222,12 +261,16 @@ class Classic_Editor {
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		$headint_1 = __( 'Default editor for all users', 'classic-editor' );
-		$heading_2 = __( 'Open the last editor used for each post', 'classic-editor' );
+		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
+		$heading_2 = __( 'Open the last editor used', 'classic-editor' ); # TWEAK: remove redundant words to maintain description in the same line -- (for each post)
 		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
 
-		add_settings_field( 'classic-editor-1', $headint_1, array( __CLASS__, 'settings_1' ), 'writing' );
-		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
+
+		// See https://github.com/WordPress/classic-editor/issues/15
+
+		// add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+
 		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
 	}
 
@@ -286,7 +329,7 @@ class Classic_Editor {
 		$settings = self::get_settings( 'refresh' );
 
 		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
-			$label = __( 'Select editor.', 'classic-editor' );
+			$label = __( 'Select Editor.', 'classic-editor' );
 		} else {
 			$label = __( 'Select default editor for all users.', 'classic-editor' );
 		}
@@ -305,41 +348,33 @@ class Classic_Editor {
 				</option>
 			</select>
 		</div>
-		<?php
-	}
-
-	public static function settings_2() {
-		$settings = self::get_settings();
-		$disabled = ! $settings['allow-users'] ? ' disabled' : '';
-		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
-
-		?>
-		<div class="classic-editor-options">
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( ! $disabled && $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'Yes', 'classic-editor' ); ?>
-			</label>
-
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" id="classic-editor-no-remember" value="no-remember"<?php echo $disabled; if ( ! $disabled && ! $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'No', 'classic-editor' ); ?>
-			</label>
-		</div>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
 			if ( window.location.hash === '#classic-editor-options' ) {
 				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
 			}
-
-			$( 'input[name="classic-editor-allow-users"]' ).on( 'change', function() {
-				if ( $( this ).val() === 'allow' ) {
-					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
-				} else {
-					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
-				}
-			});
 		} );
 		</script>
+		<?php
+	}
+
+	public static function settings_2() {
+		$settings = self::get_settings();
+
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
+
+		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" value="remember"<?php if ( $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" value="no-remember"<?php if ( ! $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
 		<?php
 	}
 
@@ -355,7 +390,7 @@ class Classic_Editor {
 			</label>
 
 			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+			<input type="radio" name="classic-editor-allow-users" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 			<?php _e( 'No', 'classic-editor' ); ?>
 			</label>
 		</div>
@@ -387,12 +422,15 @@ class Classic_Editor {
 				<?php self::settings_1(); ?>
 				</td>
 			</tr>
+			<?php // See https://github.com/WordPress/classic-editor/issues/15 ?>
+			<?php if ( false ) : ?>
 			<tr>
-				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Open the last editor used', 'classic-editor' ); ?></th>  <!-- Remove redundant words to maintain description in the same line -- (for each post) -->
 				<td>
 				<?php self::settings_2(); ?>
 				</td>
 			</tr>
+			<?php endif; ?>
 		</table>
 		<?php
 	}
@@ -423,7 +461,7 @@ class Classic_Editor {
 
 	/**
 	 * Add a hidden field in edit-form-advanced.php
-	 * to help redirect back to the classic editor on saving.
+	 * to help redirect back to the Classic Editor on saving.
 	 */
 	public static function add_field() {
 		?>
@@ -535,7 +573,7 @@ class Classic_Editor {
 
 		?>
 		<p>
-			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select editor' ); ?></label>
+			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select Editor' ); ?></label>
 			<select id="classic-editor-switch-editor" style="width: 100%;max-width: 20em;">
 				<option value=""><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
 				<option value="" data-url="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
@@ -586,7 +624,7 @@ class Classic_Editor {
 
 	/**
 	 * Adds links to the post/page screens to edit any post or page in
-	 * the Classic or Block editor.
+	 * the Classic Editor or Block Editor.
 	 *
 	 * @param  array   $actions Post actions.
 	 * @param  WP_Post $post    Edited post.
@@ -619,18 +657,18 @@ class Classic_Editor {
 		// Build the edit actions. See also: WP_Posts_List_Table::handle_row_actions().
 		$title = _draft_or_post_title( $post->ID );
 
-		// Link to the Block editor.
+		// Link to the Block Editor.
 		$url = remove_query_arg( 'classic-editor', $edit_url );
-		$text = __( 'Block editor', 'classic-editor' );
+		$text = __( 'Block Editor', 'classic-editor' );
 		/* translators: %s: post title */
-		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block editor', 'classic-editor' ), $title );
+		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block Editor', 'classic-editor' ), $title );
 		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
-		// Link to the Classic editor.
+		// Link to the Classic Editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
-		$text = __( 'Classic editor', 'classic-editor' );
+		$text = __( 'Classic Editor', 'classic-editor' );
 		/* translators: %s: post title */
-		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic editor', 'classic-editor' ), $title );
+		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic Editor', 'classic-editor' ), $title );
 		$edit_classic = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		$edit_actions = array(
@@ -645,6 +683,28 @@ class Classic_Editor {
 		return $actions;
 	}
 
+	/**
+	 * Show the editor that will be used in a "post state" in the Posts list table.
+	 */
+	public static function add_post_state( $post_states, $post ) {
+		$settings = self::get_settings();
+
+		if ( ! $settings['remember'] ) {
+			return $post_states;
+		}
+
+		$last_editor = get_post_meta( $post->ID, 'classic-editor-rememebr', true );
+
+		if ( $last_editor ) {
+			$is_classic = ( $last_editor === 'classic-editor' );
+		} else {
+			$is_classic = ( $settings['editor'] === 'classic' );
+		}
+
+		$post_states[] = $is_classic ? __( 'Classic Editor', 'classic-editor' ) : __( 'Block Editor', 'classic-editor' );
+
+		return $post_states;
+	}
 	public static function on_admin_init() {
 		global $pagenow;
 
@@ -674,9 +734,18 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Delete the options on deactivation.
+	 * Delete the options on deactivation. # TWEAK: prevents plugin updates or simply deactivating (but not deleting or uninstalling) losing custom user-defined settings
 	 */
 	public static function deactivate() {
+//		delete_option( 'classic-editor-replace' );
+//		delete_option( 'classic-editor-remember' );
+//		delete_option( 'classic-editor-allow-users' );
+	}
+
+	/**
+	 * Delete the options on uninstallation.  # TWEAK: removes custom user defined settings only when plugin is deleted or uninstalled
+	 */
+	public static function uninstall() {
 		delete_option( 'classic-editor-replace' );
 		delete_option( 'classic-editor-remember' );
 		delete_option( 'classic-editor-allow-users' );
