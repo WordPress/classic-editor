@@ -4,7 +4,7 @@
  *
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org
- * Description: Enables the WordPress classic editor and the old-style Edit Post screen layout (TinyMCE, meta boxes, etc.). Supports the older plugins that extend this screen.
+ * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, meta boxes, etc. Supports the older plugins that extend this screen.
  * Version:     1.0-beta
  * Author:      WordPress Contributors
  * License:     GPL-2.0+
@@ -39,7 +39,7 @@ class Classic_Editor {
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
 
-		// Show warning on the post-upgrade screen (about.php).
+		// Show warning on the "What's New" screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 
 		// Move the Privacy Page notice back under the title.
@@ -48,7 +48,7 @@ class Classic_Editor {
 		$settings = self::get_settings();
 
 		if ( ! $settings['hide-settings-ui'] ) {
-			// Show the plugin's admin settings, and the link to them in the plugins list table.
+			// Show the plugin's admin settings, and a link to them in the plugins list table.
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
@@ -60,7 +60,8 @@ class Classic_Editor {
 		}
 
 		if ( ! $supported_wp_version ) {
-			// TODO: Should we also show a notice that the settings will apply after WordPress is upgraded to 5.0+?
+			// For unsupported versions (less than 5.0), only show the admin settings.
+			// That will let admins to install the plugin and to configure it before upgrading WordPress.
 			return;
 		}
 
@@ -124,7 +125,7 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
+		$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
 		$remember = ( get_option( 'classic-editor-remember' ) === 'remember' );
 		$option = get_option( 'classic-editor-replace' );
 
@@ -171,7 +172,7 @@ class Classic_Editor {
 
 			if ( $settings['remember'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
-				// The editor choice will be remembered when the post is opened in either Classic or Block editor.
+				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
 				if ( 'classic-editor' === $which ) {
 					return true;
 				} elseif ( 'block-editor' === $which ) {
@@ -188,7 +189,7 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Early get the edited post ID when loading the Edit Post screen.
+	 * Get the edited post ID (early) when loading the Edit Post screen.
 	 */
 	private static function get_edited_post_id() {
 		if (
@@ -222,11 +223,11 @@ class Classic_Editor {
 			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
 		) );
 
-		$headint_1 = __( 'Default editor for all users', 'classic-editor' );
+		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
 		$heading_2 = __( 'Open the last editor used for each post', 'classic-editor' );
 		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
 
-		add_settings_field( 'classic-editor-1', $headint_1, array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
 		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
 		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
 	}
@@ -305,41 +306,32 @@ class Classic_Editor {
 				</option>
 			</select>
 		</div>
-		<?php
-	}
-
-	public static function settings_2() {
-		$settings = self::get_settings();
-		$disabled = ! $settings['allow-users'] ? ' disabled' : '';
-		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
-
-		?>
-		<div class="classic-editor-options">
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" id="classic-editor-remember" value="remember"<?php echo $disabled; if ( ! $disabled && $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'Yes', 'classic-editor' ); ?>
-			</label>
-
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" id="classic-editor-no-remember" value="no-remember"<?php echo $disabled; if ( ! $disabled && ! $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'No', 'classic-editor' ); ?>
-			</label>
-		</div>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
 			if ( window.location.hash === '#classic-editor-options' ) {
 				$( '.classic-editor-options' ).closest( 'td' ).addClass( 'highlight' );
 			}
-
-			$( 'input[name="classic-editor-allow-users"]' ).on( 'change', function() {
-				if ( $( this ).val() === 'allow' ) {
-					$( 'input[name="classic-editor-remember"]' ).prop({ disabled: false });
-				} else {
-					$( 'input[name="classic-editor-remember"]' ).prop({ checked: false, disabled: true });
-				}
-			});
 		} );
 		</script>
+		<?php
+	}
+
+	public static function settings_2() {
+		$settings = self::get_settings();
+		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
+
+		?>
+		<div class="classic-editor-options">
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" value="remember"<?php if ( $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'Yes', 'classic-editor' ); ?>
+			</label>
+
+			<label style="<?php echo $padding ?>">
+			<input type="radio" name="classic-editor-remember" value="no-remember"<?php if ( ! $settings['remember'] ) echo ' checked'; ?> />
+			<?php _e( 'No', 'classic-editor' ); ?>
+			</label>
+		</div>
 		<?php
 	}
 
@@ -355,7 +347,7 @@ class Classic_Editor {
 			</label>
 
 			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" value="no-allow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+			<input type="radio" name="classic-editor-allow-users" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 			<?php _e( 'No', 'classic-editor' ); ?>
 			</label>
 		</div>
