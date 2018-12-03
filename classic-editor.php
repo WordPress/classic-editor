@@ -29,6 +29,7 @@ if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
 	const plugin_version = 1.0;
 	private static $settings;
+	private static $supported_post_types = array();
 
 	private function __construct() {}
 
@@ -63,6 +64,7 @@ class Classic_Editor {
 			add_filter( 'use_block_editor_for_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 			add_filter( 'redirect_post_location', array( __CLASS__, 'redirect_location' ) );
 			add_action( 'edit_form_top', array( __CLASS__, 'add_redirect_helper' ) );
+			add_action( 'admin_head-edit.php', array( __CLASS__, 'add_edit_php_inline_style' ) );
 
 			add_action( 'edit_form_top', array( __CLASS__, 'remember_classic_editor' ) );
 			add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
@@ -76,7 +78,7 @@ class Classic_Editor {
 			// Switch editors while editing a post
 			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
 			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309
-			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
+			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_block_editor_scripts' ) );
 		} else {
 			if ( $settings['editor'] === 'classic' ) {
 				// Consider disabling other Block Editor functionality.
@@ -406,6 +408,7 @@ class Classic_Editor {
 	 */
 	public static function choose_editor( $use_block_editor, $post ) {
 		$settings = self::get_settings();
+		$editors = self::get_enabled_editors_for_post( $post );
 
 		// Open the default editor when no $post and for "Add New" links.
 		if ( empty( $post->ID ) || $post->post_status === 'auto-draft' ) {
@@ -416,14 +419,14 @@ class Classic_Editor {
 			$use_block_editor = false;
 		}
 
-		/**
-		 * Filters which editor to use for each post.
-		 *
-		 * @param boolean $use_block_editor True for Block Editor, false for Classic Editor.
-		 * @param WP_Post $post             The post being edited.
-		 * @param array $settings           The plugin's settings.
-		 */
-		return apply_filters( 'classic_editor_choose_editor', $use_block_editor, $post, $settings );
+		// Enforce the editor if set by plugins.
+		if ( $use_block_editor && ! $editors['block_editor'] ) {
+			$use_block_editor = false;
+		} elseif ( ! $use_block_editor && ! $editors['classic_editor'] ) {
+			$use_block_editor = true;
+		}
+
+		return $use_block_editor;
 	}
 
 	/**
@@ -454,7 +457,14 @@ class Classic_Editor {
 	}
 
 	public static function add_meta_box( $post_type, $post ) {
-		if ( ! self::is_classic( $post->ID ) || ! use_block_editor_for_post_type( $post_type ) ) {
+		if ( ! self::is_classic( $post->ID ) ) {
+			return;
+		}
+
+		$editors = self::get_enabled_editors_for_post( $post );
+
+		if ( ! $editors['block_editor'] ) {
+			// Editor cannot be switched.
 			return;
 		}
 
@@ -497,7 +507,14 @@ class Classic_Editor {
 		<?php
 	}
 
-	public static function enqueue_scripts() {
+	public static function enqueue_block_editor_scripts() {
+		$editors = self::get_enabled_editors_for_post( $GLOBALS['post'] );
+
+		if ( ! $editors['classic_editor'] ) {
+			// Editor cannot be switched.
+			return;
+		}
+
 		wp_enqueue_script(
 			'classic-editor-add-submenu',
 			plugins_url( 'js/block-editor-plugin.js', __FILE__ ),
@@ -527,6 +544,64 @@ class Classic_Editor {
 	}
 
 	/**
+	 * Checks which editors are enabled for the post type.
+	 *
+	 * @param string $post_type The post type.
+	 * @return array Associative array of the editors and whether they are enabled for the post type.
+	 */
+	private static function get_enabled_editors_for_post_type( $post_type ) {
+		if ( isset( self::$supported_post_types[ $post_type ] ) ) {
+			return self::$supported_post_types[ $post_type ];
+		}
+
+		$classic_editor = post_type_supports( $post_type, 'editor' );
+		$block_editor = use_block_editor_for_post_type( $post_type );
+
+		$editors = array(
+			'classic_editor' => $classic_editor,
+			'block_editor'   => $block_editor,
+		);
+
+		/**
+		 * Filters the editors that are enabled for the post type.
+		 *
+		 * @param array $editors    Associative array of the editors and whether they are enabled for the post type.
+		 * @param string $post_type The post type.
+		 */
+		$editors = apply_filters( 'classic_editor_enabled_editors_for_post_type', $editors, $post_type );
+		self::$supported_post_types[ $post_type ] = $editors;
+
+		return $editors;
+	}
+
+	/**
+	 * Checks which editors are enabled for the post.
+	 *
+	 * @param WP_Post $post  The post object.
+	 * @return array Associative array of the editors and whether they are enabled for the post.
+	 */
+	private static function get_enabled_editors_for_post( $post ) {
+		$post_type = get_post_type( $post );
+
+		if ( ! $post_type ) {
+			return array(
+				'classic_editor' => false,
+				'block_editor'   => false,
+			);
+		}
+
+		$editors = self::get_enabled_editors_for_post_type( $post_type );
+
+		/**
+		 * Filters the editors that are enabled for the post.
+		 *
+		 * @param array $editors Associative array of the editors and whether they are enabled for the post.
+		 * @param WP_Post $post  The post object.
+		 */
+		return apply_filters( 'classic_editor_enabled_editors_for_post', $editors, $post );
+	}
+
+	/**
 	 * Adds links to the post/page screens to edit any post or page in
 	 * the Classic Editor or Block Editor.
 	 *
@@ -550,12 +625,15 @@ class Classic_Editor {
 			return $actions;
 		}
 
-		$settings = self::get_settings();
+		$editors = self::get_enabled_editors_for_post( $post );
 
-		if ( $settings['allow-users'] ) {
-			// Forget the previous value when going to a specific editor.
-			$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
+		// Do not show the links if only one editor is available.
+		if ( ! $editors['classic_editor'] || ! $editors['block_editor'] ) {
+			return $actions;
 		}
+
+		// Forget the previous value when going to a specific editor.
+		$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 
 		// Build the edit actions. See also: WP_Posts_List_Table::handle_row_actions().
 		$title = _draft_or_post_title( $post->ID );
@@ -590,23 +668,45 @@ class Classic_Editor {
 	 * Show the editor that will be used in a "post state" in the Posts list table.
 	 */
 	public static function add_post_state( $post_states, $post ) {
-		$settings = self::get_settings();
+		$editors = self::get_enabled_editors_for_post( $post );
 
-		if ( ! $settings['allow-users'] ) {
+		if ( ! $editors['classic_editor'] && ! $editors['block_editor'] ) {
 			return $post_states;
-		}
-
-		$last_editor = get_post_meta( $post->ID, 'classic-editor-rememebr', true );
-
-		if ( $last_editor ) {
-			$is_classic = ( $last_editor === 'classic-editor' );
+		} elseif ( $editors['classic_editor'] && ! $editors['block_editor'] ) {
+			// Forced to Classic Editor.
+			$state = '<span class="classic-editor-forced-state">' . __( 'Classic Editor', 'classic-editor' ) . '</span>';
+		} elseif ( ! $editors['classic_editor'] && $editors['block_editor'] ) {
+			// Forced to Block Editor.
+			$state = '<span class="classic-editor-forced-state">' . __( 'Block Editor', 'classic-editor' ) . '</span>';
 		} else {
-			$is_classic = ( $settings['editor'] === 'classic' );
+			$last_editor = get_post_meta( $post->ID, 'classic-editor-rememebr', true );
+
+			if ( $last_editor ) {
+				$is_classic = ( $last_editor === 'classic-editor' );
+			} else {
+				$settings = self::get_settings();
+				$is_classic = ( $settings['editor'] === 'classic' );
+			}
+
+			$state = $is_classic ? __( 'Classic Editor', 'classic-editor' ) : __( 'Block Editor', 'classic-editor' );
 		}
 
-		$post_states[] = $is_classic ? __( 'Classic Editor', 'classic-editor' ) : __( 'Block Editor', 'classic-editor' );
+		(array) $post_states[] = $state;
 
 		return $post_states;
+	}
+
+	public static function add_edit_php_inline_style() {
+		?>
+		<style>
+		.classic-editor-forced-state {
+			font-style: italic;
+			font-weight: 400;
+			color: #72777c;
+			font-size: small;
+		}
+		</style>
+		<?php
 	}
 
 	public static function on_admin_init() {
