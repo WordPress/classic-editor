@@ -84,8 +84,8 @@ class Classic_Editor {
 			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309
 			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_scripts' ) );
 
-			if ( $settings['remember'] ) {
-				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic' ) );
+			if ( $settings['allow-users'] ) {
+				add_action( 'edit_form_top', array( __CLASS__, 'remember_classic_editor' ) );
 				add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
 				add_filter( 'display_post_states', array( __CLASS__, 'add_post_state' ), 10, 2 );
 			}
@@ -96,10 +96,9 @@ class Classic_Editor {
 		/**
 		 * Can be used to override the plugin's settings and hide the settings UI.
 		 *
-		 * Has to return an associative array with three keys.
+		 * Has to return an associative array with two keys.
 		 * The defaults are:
 		 *   'editor' => 'classic', // Accepted values: 'classic', 'block'.
-		 *   'remember' => false,
 		 *   'allow_users' => true,
 		 *
 		 * Note: using this filter always hides the settings UI (as it overrides the user's choices).
@@ -107,16 +106,8 @@ class Classic_Editor {
 		$settings = apply_filters( 'classic_editor_plugin_settings', false );
 
 		if ( is_array( $settings ) ) {
-			// Normalize...
-			$editor = 'classic';
-
-			if ( isset( $settings['editor'] ) && $settings['editor'] === 'block' ) {
-				$editor = 'block';
-			}
-
 			return array(
-				'editor' => $editor,
-				'remember' => ( ! empty( $settings['remember'] ) ),
+				'editor' => ( isset( $settings['editor'] ) && $settings['editor'] === 'block' ) ? 'block' : 'classic',
 				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ), // Allow by default.
 				'hide-settings-ui' => true,
 			);
@@ -127,14 +118,13 @@ class Classic_Editor {
 		}
 
 		$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
-		$remember = ( get_option( 'classic-editor-remember' ) === 'remember' );
 		$option = get_option( 'classic-editor-replace' );
 
 		// Normalize old options.
 		if ( $option === 'block' || $option === 'no-replace' ) {
 			$editor = 'block';
 		} else {
-			// `empty( $option ) || $option === 'classic' || $option === 'replace'`.
+			// empty( $option ) || $option === 'classic' || $option === 'replace'.
 			$editor = 'classic';
 		}
 
@@ -142,23 +132,13 @@ class Classic_Editor {
 		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
 			$user_options = get_user_option( 'classic-editor-settings' );
 
-			if ( is_array( $user_options ) ) {
-				if ( isset( $user_options['remember'] ) ) {
-					$remember = $user_options['remember'] === 'remember';
-				}
-
-				if ( isset( $user_options['editor'] ) && ( $user_options['editor'] === 'block' || $user_options['editor'] === 'classic' ) ) {
-					$editor = $user_options['editor'];
-				}
+			if ( $user_options === 'block' || $user_options === 'classic' ) {
+				$editor = $user_options;
 			}
 		}
 
-		// See https://github.com/WordPress/classic-editor/issues/15
-		$remember = true;
-
 		self::$settings = array(
 			'editor' => $editor,
-			'remember' => $remember,
 			'hide-settings-ui' => false,
 			'allow-users' => $allow_users,
 		);
@@ -174,7 +154,7 @@ class Classic_Editor {
 		if ( $post_id ) {
 			$settings = self::get_settings();
 
-			if ( $settings['remember'] && ! isset( $_GET['classic-editor__forget'] ) ) {
+			if ( $settings['allow-users'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
 				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
 				if ( 'classic-editor' === $which ) {
@@ -215,28 +195,19 @@ class Classic_Editor {
 			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
 		) );
 
-		register_setting( 'writing', 'classic-editor-remember', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_option_remember' ),
-		) );
-
 		register_setting( 'writing', 'classic-editor-allow-users', array(
 			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
 		) );
 
 		add_option_whitelist( array(
-			'writing' => array( 'classic-editor-replace', 'classic-editor-remember', 'classic-editor-allow-users' ),
+			'writing' => array( 'classic-editor-replace', 'classic-editor-allow-users' ),
 		) );
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
-		$heading_2 = __( 'Open the last editor used for each post', 'classic-editor' );
-		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
+		$heading_2 = __( 'Allow users to switch editors', 'classic-editor' );
 
 		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
-
-		// See https://github.com/WordPress/classic-editor/issues/15
-		// add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
-
-		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
+		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
 	}
 
 	public static function save_user_settings( $user_id ) {
@@ -252,14 +223,7 @@ class Classic_Editor {
 			}
 
 			$editor = self::validate_option_editor( $_POST['classic-editor-replace'] );
-			$remember = self::validate_option_remember( $_POST['classic-editor-remember'] );
-
-			$options = array(
-				'editor' => $editor,
-				'remember' => $remember,
-			);
-
-			update_user_option( $user_id, 'classic-editor-settings', $options );
+			update_user_option( $user_id, 'classic-editor-settings', $editor );
 		}
 	}
 
@@ -272,14 +236,6 @@ class Classic_Editor {
 		}
 
 		return 'classic';
-	}
-
-	public static function validate_option_remember( $value ) {
-		if ( $value === 'remember' ) {
-			return 'remember';
-		}
-
-		return 'no-remember';
 	}
 
 	public static function validate_option_allow_users( $value ) {
@@ -324,25 +280,6 @@ class Classic_Editor {
 	}
 
 	public static function settings_2() {
-		$settings = self::get_settings();
-		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
-
-		?>
-		<div class="classic-editor-options">
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" value="remember"<?php if ( $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'Yes', 'classic-editor' ); ?>
-			</label>
-
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-remember" value="no-remember"<?php if ( ! $settings['remember'] ) echo ' checked'; ?> />
-			<?php _e( 'No', 'classic-editor' ); ?>
-			</label>
-		</div>
-		<?php
-	}
-
-	public static function settings_3() {
 		$settings = self::get_settings( 'refresh' );
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
@@ -386,15 +323,6 @@ class Classic_Editor {
 				<?php self::settings_1(); ?>
 				</td>
 			</tr>
-			<?php // See https://github.com/WordPress/classic-editor/issues/15 ?>
-			<?php if ( false ) : ?>
-			<tr>
-				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
-				<td>
-				<?php self::settings_2(); ?>
-				</td>
-			</tr>
-			<?php endif; ?>
 		</table>
 		<?php
 	}
@@ -436,7 +364,7 @@ class Classic_Editor {
 	/**
 	 * Remember when the Classic Editor was used to edit a post.
 	 */
-	public static function remember_classic( $post ) {
+	public static function remember_classic_editor( $post ) {
 		if ( ! empty( $post->ID ) ) {
 			self::remember( $post->ID, 'classic-editor' );
 		}
@@ -530,7 +458,7 @@ class Classic_Editor {
 
 		$edit_url = remove_query_arg( 'classic-editor', $edit_url );
 
-		if ( $settings['remember'] ) {
+		if ( $settings['allow-users'] ) {
 			// Forget the previous value when going to a specific editor.
 			$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 		}
@@ -613,7 +541,7 @@ class Classic_Editor {
 
 		$settings = self::get_settings();
 
-		if ( $settings['remember'] ) {
+		if ( $settings['allow-users'] ) {
 			// Forget the previous value when going to a specific editor.
 			$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 		}
@@ -653,7 +581,7 @@ class Classic_Editor {
 	public static function add_post_state( $post_states, $post ) {
 		$settings = self::get_settings();
 
-		if ( ! $settings['remember'] ) {
+		if ( ! $settings['allow-users'] ) {
 			return $post_states;
 		}
 
@@ -693,7 +621,6 @@ class Classic_Editor {
 	public static function activate() {
 		if ( ! get_option( 'classic-editor-replace' ) ) {
 			update_option( 'classic-editor-replace', 'classic' );
-			update_option( 'classic-editor-remember', '' );
 			update_option( 'classic-editor-allow-users', 'allow' );
 		}
 	}
@@ -703,7 +630,6 @@ class Classic_Editor {
 	 */
 	public static function deactivate() {
 		delete_option( 'classic-editor-replace' );
-		delete_option( 'classic-editor-remember' );
 		delete_option( 'classic-editor-allow-users' );
 	}
 }
