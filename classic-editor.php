@@ -3,9 +3,9 @@
  * Classic Editor
  *
  * Plugin Name: Classic Editor
- * Plugin URI:  https://wordpress.org/plugins/classic-editor/
- * Description: Enables the WordPress Classic Editor the old-style edit screen layout (TinyMCE, Meta Boxes, etc...) and support the add-ons that extend it.
- * Version:     1.0.0-beta
+ * Plugin URI:  https://wordpress.org
+ * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, meta boxes, etc. Supports the older plugins that extend this screen.
+ * Version:     1.0-beta
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -20,44 +20,11 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * Tweaked Build 2018-12-02 based on latest GitHub code -- see all # TWEAK (tag description) for the changes
- *
- * Tweaks description:
- *
- * - Concise plugin description (detailed plugin guidelines not allow more of 151 characters)
- * - Use of use Semantic Versioning MAJOR.MINOR.PATCH 1.0.0-beta instead 1.0-beta
- * - Corrected license spacing
- * - Network support (multisite)
- * - Secureds ABSPATH code
- * - Corrected capitalization for Block Editor and Classic Editor
- * - Removes redundant words to maintain description in the same line
- * - Corrects the case where the plugin updates lose and delete user-defined custom settings
- * - Corrects the case where the plugin deactivation lose and delete user-defined custom settings
- *
  */
 
-defined( 'ABSPATH' ) || die( 'Invalid request.' ); # TWEAK: alternative code more secure?
-
-if ( ! defined( 'PLUGIN_CLASSIC_EDITOR_BUILD' ) ) define( 'PLUGIN_CLASSIC_EDITOR_BUILD', '2018-12-02' );
-
-	add_filter( 'plugin_row_meta', 'classic_editor_adds_row_meta_build', 10, 4 ); # TWEAK: only for development version?
-
-	/**
-	 * Adds Plugin Row Meta Build and Language.
-	 */
-	function classic_editor_adds_row_meta_build( $plugin_meta, $plugin_file ) {
-		if ( $plugin_file == plugin_basename( __FILE__ ) )
-			{
-				$plugin_meta[ 0 ] .= ' | ' . __( 'Build',  'classic-editor' ) . ' ' . date_i18n( get_option( 'date_format' ), strtotime( PLUGIN_CLASSIC_EDITOR_BUILD ) );
-				$plugin_meta[ 0 ] .= ' | ' . __( 'Language', 'classic-editor' ) . ' ' . get_locale();
-			}
-		return $plugin_meta;
-	}
-
- //if ( ! defined( 'ABSPATH' ) ) {
-//	die( 'Invalid request.' );
-//}
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Invalid request.' );
+}
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
@@ -210,7 +177,8 @@ class Classic_Editor {
 
 			if ( $settings['remember'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
-				// The editor choice will be "remembered" when the post is opened in either Classic Editor or Block Editor.
+
+				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
 				if ( 'classic-editor' === $which ) {
 					return true;
 				} elseif ( 'block-editor' === $which ) {
@@ -262,7 +230,7 @@ class Classic_Editor {
 		) );
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
-		$heading_2 = __( 'Open the last editor used', 'classic-editor' ); # TWEAK: remove redundant words to maintain description in the same line -- (for each post)
+		$heading_2 = __( 'Open the last editor used for each post', 'classic-editor' );
 		$heading_3 = __( 'Allow users to switch editors', 'classic-editor' );
 
 		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
