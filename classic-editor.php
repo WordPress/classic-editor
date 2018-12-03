@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Classic Editor
  *
@@ -12,7 +12,6 @@
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
- * Network:     true
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
  * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
@@ -295,7 +294,7 @@ class Classic_Editor {
 		$settings = self::get_settings( 'refresh' );
 
 		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
-			$label = __( 'Select Editor.', 'classic-editor' );
+			$label = __( 'Select editor.', 'classic-editor' );
 		} else {
 			$label = __( 'Select default editor for all users.', 'classic-editor' );
 		}
@@ -390,7 +389,7 @@ class Classic_Editor {
 			<?php // See https://github.com/WordPress/classic-editor/issues/15 ?>
 			<?php if ( false ) : ?>
 			<tr>
-				<th scope="row"><?php _e( 'Open the last editor used', 'classic-editor' ); ?></th>  <!-- Remove redundant words to maintain description in the same line -- (for each post) -->
+				<th scope="row"><?php _e( 'Open the last editor used for each post', 'classic-editor' ); ?></th>
 				<td>
 				<?php self::settings_2(); ?>
 				</td>
@@ -538,7 +537,7 @@ class Classic_Editor {
 
 		?>
 		<p>
-			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select Editor' ); ?></label>
+			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select editor' ); ?></label>
 			<select id="classic-editor-switch-editor" style="width: 100%;max-width: 20em;">
 				<option value=""><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
 				<option value="" data-url="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
