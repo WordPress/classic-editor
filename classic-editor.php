@@ -3,23 +3,22 @@
  * Classic Editor
  *
  * Plugin Name: Classic Editor
- * Plugin URI:  https://wordpress.org
- * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, meta boxes, etc. Supports the older plugins that extend this screen.
+ * Plugin URI:  https://wordpress.org/plugins/classic-editor/
+ * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
  * Version:     1.0-beta
  * Author:      WordPress Contributors
- * License:     GPL-2.0+
+ * Author URI:  https://github.com/WordPress/classic-editor/
+ * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
  *
- *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
- * General Public License version 2, as published by the Free Software Foundation.  You may NOT assume
+ * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
  * that you can use any other version of the GPL.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,7 +36,7 @@ class Classic_Editor {
 		$supported_wp_version = version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' );
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
-		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
+		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
 
 		// Move the Privacy Page notice back under the title.
 		add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
@@ -119,7 +118,7 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
+		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
 		$option = get_option( 'classic-editor-replace' );
 
 		// Normalize old options.
@@ -158,6 +157,7 @@ class Classic_Editor {
 
 			if ( $settings['allow-users'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
+
 				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
 				if ( 'classic-editor' === $which ) {
 					return true;
@@ -355,7 +355,7 @@ class Classic_Editor {
 
 	/**
 	 * Add a hidden field in edit-form-advanced.php
-	 * to help redirect back to the classic editor on saving.
+	 * to help redirect back to the Classic Editor on saving.
 	 */
 	public static function add_redirect_helper() {
 		?>
@@ -527,7 +527,7 @@ class Classic_Editor {
 
 	/**
 	 * Adds links to the post/page screens to edit any post or page in
-	 * the Classic or Block editor.
+	 * the Classic Editor or Block Editor.
 	 *
 	 * @param  array   $actions Post actions.
 	 * @param  WP_Post $post    Edited post.
@@ -559,18 +559,18 @@ class Classic_Editor {
 		// Build the edit actions. See also: WP_Posts_List_Table::handle_row_actions().
 		$title = _draft_or_post_title( $post->ID );
 
-		// Link to the Block editor.
+		// Link to the Block Editor.
 		$url = remove_query_arg( 'classic-editor', $edit_url );
-		$text = __( 'Block editor', 'classic-editor' );
+		$text = __( 'Block Editor', 'classic-editor' );
 		/* translators: %s: post title */
-		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block editor', 'classic-editor' ), $title );
+		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block Editor', 'classic-editor' ), $title );
 		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
-		// Link to the Classic editor.
+		// Link to the Classic Editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
-		$text = __( 'Classic editor', 'classic-editor' );
+		$text = __( 'Classic Editor', 'classic-editor' );
 		/* translators: %s: post title */
-		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic editor', 'classic-editor' ), $title );
+		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic Editor', 'classic-editor' ), $title );
 		$edit_classic = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		$edit_actions = array(
@@ -636,9 +636,9 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Delete the options on deactivation.
+	 * Delete the options on uninstall.
 	 */
-	public static function deactivate() {
+	public static function uninstall() {
 		delete_option( 'classic-editor-replace' );
 		delete_option( 'classic-editor-allow-users' );
 	}
