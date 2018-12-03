@@ -41,10 +41,6 @@ defined( 'ABSPATH' ) || die( 'Invalid request.' ); # TWEAK: alternative code mor
 
 if ( ! defined( 'PLUGIN_CLASSIC_EDITOR_BUILD' ) ) define( 'PLUGIN_CLASSIC_EDITOR_BUILD', '2018-12-02' );
 
- //if ( ! defined( 'ABSPATH' ) ) {
-//	die( 'Invalid request.' );
-//}
-
 	add_filter( 'plugin_row_meta', 'classic_editor_adds_row_meta_build', 10, 4 ); # TWEAK: only for development version?
 
 	/**
@@ -58,6 +54,10 @@ if ( ! defined( 'PLUGIN_CLASSIC_EDITOR_BUILD' ) ) define( 'PLUGIN_CLASSIC_EDITOR
 			}
 		return $plugin_meta;
 	}
+
+ //if ( ! defined( 'ABSPATH' ) ) {
+//	die( 'Invalid request.' );
+//}
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
@@ -268,7 +268,6 @@ class Classic_Editor {
 		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
 
 		// See https://github.com/WordPress/classic-editor/issues/15
-
 		// add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
 
 		add_settings_field( 'classic-editor-3', $heading_3, array( __CLASS__, 'settings_3' ), 'writing' );
@@ -360,7 +359,6 @@ class Classic_Editor {
 
 	public static function settings_2() {
 		$settings = self::get_settings();
-
 		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
@@ -705,6 +703,7 @@ class Classic_Editor {
 
 		return $post_states;
 	}
+
 	public static function on_admin_init() {
 		global $pagenow;
 
@@ -734,18 +733,18 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Delete the options on deactivation. # TWEAK: prevents plugin updates or simply deactivating (but not deleting or uninstalling) losing custom user-defined settings
+	 * Delete the options on deactivation.
 	 */
-	public static function deactivate() {
+	public static function deactivate() {               # TWEAK: prevents plugin updates or simply deactivating (but not deleting or uninstalling) losing custom user-defined settings
 //		delete_option( 'classic-editor-replace' );
 //		delete_option( 'classic-editor-remember' );
 //		delete_option( 'classic-editor-allow-users' );
 	}
 
 	/**
-	 * Delete the options on uninstallation.  # TWEAK: removes custom user defined settings only when plugin is deleted or uninstalled
+	 * Delete the options on uninstallation.
 	 */
-	public static function uninstall() {
+	public static function uninstall() {                # TWEAK: removes custom user defined settings only when plugin is deleted or uninstalled
 		delete_option( 'classic-editor-replace' );
 		delete_option( 'classic-editor-remember' );
 		delete_option( 'classic-editor-allow-users' );
