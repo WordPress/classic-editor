@@ -3,8 +3,8 @@
  * Classic Editor
  *
  * Plugin Name: Classic Editor
- * Plugin URI:  https://wordpress.org
- * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, meta boxes, etc. Supports the older plugins that extend this screen.
+ * Plugin URI:  https://wordpress.org/plugins/classic-editor/
+ * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
  * Version:     1.0-beta
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
@@ -37,8 +37,7 @@ class Classic_Editor {
 		$supported_wp_version = version_compare( $GLOBALS['wp_version'], '5.0-beta', '>' );
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
-		register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
-		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) ); # TWEAK: preserve cutom user settings when plugin is updated or deactivated but not deleted
+		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
 
 		// Show warning on the "What's New" screen (about.php).
 		add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
@@ -127,7 +126,7 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
+		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
 		$remember = ( get_option( 'classic-editor-remember' ) === 'remember' );
 		$option = get_option( 'classic-editor-replace' );
 
@@ -701,18 +700,9 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Delete the options on deactivation.
+	 * Delete the options on uninstall.
 	 */
-	public static function deactivate() {               # TWEAK: prevents plugin updates or simply deactivating (but not deleting or uninstalling) losing custom user-defined settings
-//		delete_option( 'classic-editor-replace' );
-//		delete_option( 'classic-editor-remember' );
-//		delete_option( 'classic-editor-allow-users' );
-	}
-
-	/**
-	 * Delete the options on uninstallation.
-	 */
-	public static function uninstall() {                # TWEAK: removes custom user defined settings only when plugin is deleted or uninstalled
+	public static function uninstall() {
 		delete_option( 'classic-editor-replace' );
 		delete_option( 'classic-editor-remember' );
 		delete_option( 'classic-editor-allow-users' );
