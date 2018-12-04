@@ -254,25 +254,16 @@ class Classic_Editor {
 	public static function settings_1() {
 		$settings = self::get_settings( 'refresh' );
 
-		if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
-			$label = __( 'Select editor.', 'classic-editor' );
-		} else {
-			$label = __( 'Select default editor for all users.', 'classic-editor' );
-		}
-
 		?>
 		<div class="classic-editor-options">
-			<label for="classic-editor-replace" class="screen-reader-text">
-				<?php echo $label; ?>
-			</label>
-			<select name="classic-editor-replace" id="classic-editor-replace">
-				<option value="classic">
-					<?php _e( 'Classic Editor', 'classic-editor' ); ?>
-				</option>
-				<option value="block"<?php if ( $settings['editor'] === 'block' ) echo ' selected'; ?>>
-					<?php _e( 'Block Editor', 'classic-editor' ); ?>
-				</option>
-			</select>
+			<p>
+				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
+				<label for="classic-editor-classic"><?php _e( 'Classic Editor', 'classic-editor' ); ?></label>
+			</p>
+			<p>
+				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
+				<label for="classic-editor-block"><?php _e( 'Block Editor', 'classic-editor' ); ?></label>
+			</p>
 		</div>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
@@ -286,19 +277,17 @@ class Classic_Editor {
 
 	public static function settings_2() {
 		$settings = self::get_settings( 'refresh' );
-		$padding = is_rtl() ? 'padding-left: 1em;' : 'padding-right: 1em;';
 
 		?>
 		<div class="classic-editor-options">
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
-			<?php _e( 'Yes', 'classic-editor' ); ?>
-			</label>
-
-			<label style="<?php echo $padding ?>">
-			<input type="radio" name="classic-editor-allow-users" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
-			<?php _e( 'No', 'classic-editor' ); ?>
-			</label>
+			<p>
+				<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+				<label for="classic-editor-allow"><?php _e( 'Yes', 'classic-editor' ); ?></label>
+			</p>
+			<p>
+				<input type="radio" name="classic-editor-allow-users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+				<label for="classic-editor-disallow"><?php _e( 'No', 'classic-editor' ); ?></label>
+			</p>
 		</div>
 		<?php
 	}
@@ -321,7 +310,7 @@ class Classic_Editor {
 
 		?>
 		<table class="form-table">
-			<tr>
+			<tr class="classic-editor-user-options">
 				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
@@ -329,6 +318,7 @@ class Classic_Editor {
 				</td>
 			</tr>
 		</table>
+		<script>jQuery( 'tr.user-rich-editing-wrap' ).before( jQuery( 'tr.classic-editor-user-options' ) );</script>
 		<?php
 	}
 
@@ -349,8 +339,10 @@ class Classic_Editor {
 			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
+
+
 		?>
-		<div id="message" class="error notice" style="display: block !important">
+		<div id="message" class="notice-warning notice" style="display: inline-block !important; margin-<?php echo ( is_rtl() ? 'left' : 'right' ); ?>: 160px;">
 			<p><?php echo $message; ?></p>
 		</div>
 		<?php
@@ -457,53 +449,43 @@ class Classic_Editor {
 	}
 
 	public static function add_meta_box( $post_type, $post ) {
-		if ( ! self::is_classic( $post->ID ) ) {
-			return;
-		}
-
 		$editors = self::get_enabled_editors_for_post( $post );
 
-		if ( ! $editors['block_editor'] ) {
-			// Editor cannot be switched.
+		if ( ! $editors['block_editor'] || ! $editors['classic_editor'] ) {
+			// Editors cannot be switched.
 			return;
 		}
 
 		$id = 'classic-editor-switch-editor';
 		$title = __( 'Editor', 'classic-editor' );
 		$callback = array( __CLASS__, 'do_meta_box' );
+		/* Add when the Block Editor plugin is enabled.
 		$args = array(
 			'__back_compat_meta_box' => true,
 	    );
+	    */
 
-		add_meta_box( $id, $title, $callback, null, 'side', 'default', $args );
+		add_meta_box( $id, $title, $callback, null, 'side', 'default' );
 	}
 
 	public static function do_meta_box( $post ) {
 		$edit_url = get_edit_post_link( $post->ID, 'raw' );
-		// Switch to Block Editor.
-		$edit_url = remove_query_arg( 'classic-editor', $edit_url );
+
+		if ( did_action( 'enqueue_block_editor_assets' ) ) {
+			// Block Editor is loading, switch to Classic Editor.
+			$edit_url = add_query_arg( 'classic-editor', $edit_url );
+			$link_text = __( 'Switch to Classic Editor', 'classic-editor' );
+		} else {
+			// Switch to Block Editor.
+			$edit_url = remove_query_arg( 'classic-editor', $edit_url );
+			$link_text = __( 'Switch to Block Editor', 'classic-editor' );
+		}
+
 		// Forget the previous value when going to a specific editor.
 		$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 
 		?>
-		<p>
-			<label class="screen-reader-text" for="classic-editor-switch-editor"><?php _e( 'Select editor' ); ?></label>
-			<select id="classic-editor-switch-editor" style="width: 100%;max-width: 20em;">
-				<option value=""><?php _e( 'Classic Editor', 'classic-editor' ); ?></option>
-				<option value="" data-url="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Block Editor', 'classic-editor' ); ?></option>
-			</select>
-		</p>
-		<script>
-		jQuery( 'document' ).ready( function( $ ) {
-			var $select = $( '#classic-editor-switch-editor' );
-			$select.on( 'change', function( event ) {
-				var url = $select.find( ':selected' ).attr( 'data-url' );
-				if ( url ) {
-					document.location = url;
-				}
-			} );
-		} );
-		</script>
+		<p style="margin: 1em;"><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo $link_text; ?></a></p>
 		<?php
 	}
 
