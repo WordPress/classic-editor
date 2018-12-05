@@ -339,10 +339,10 @@ class Classic_Editor {
 			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
-
+		$margin = is_rtl() ? 'margin: 1em 0 0 160px;' : 'margin: 1em 160px 0 0;';
 
 		?>
-		<div id="message" class="notice-warning notice" style="display: inline-block !important; margin-<?php echo ( is_rtl() ? 'left' : 'right' ); ?>: 160px;">
+		<div id="message" class="notice-warning notice" style="display: inline-block !important; <?php echo $margin; ?>">
 			<p><?php echo $message; ?></p>
 		</div>
 		<?php
