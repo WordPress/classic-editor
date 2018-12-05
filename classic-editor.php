@@ -5,13 +5,14 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.0-beta
+ * Version:     1.0
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
+ * Network:     true
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
  * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
@@ -40,6 +41,11 @@ class Classic_Editor {
 		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
 
 		$settings = self::get_settings();
+
+		if ( is_multisite() ) {
+			add_action( 'wpmu_options', array( __CLASS__, 'network_settings' ) );
+			add_action( 'update_wpmu_options', array( __CLASS__, 'save_network_settings' ) );
+		}
 
 		if ( ! $settings['hide-settings-ui'] ) {
 			// Show the plugin's admin settings, and a link to them in the plugins list table.
@@ -103,7 +109,7 @@ class Classic_Editor {
 		 * Has to return an associative array with two keys.
 		 * The defaults are:
 		 *   'editor' => 'classic', // Accepted values: 'classic', 'block'.
-		 *   'allow_users' => true,
+		 *   'allow-users' => true,
 		 *
 		 * Note: using this filter always hides the settings UI (as it overrides the user's choices).
 		 */
@@ -121,6 +127,15 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
+		if ( is_multisite() && get_site_option( 'classic-editor-allow-sites' ) !== 'allow' ) {
+			// Return default network options.
+			return array(
+				'editor' => 'classic',
+				'allow-users' => false,
+				'hide-settings-ui' => true,
+			);
+		}
+
 		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
 		$option = get_option( 'classic-editor-replace' );
 
@@ -132,7 +147,7 @@ class Classic_Editor {
 			$editor = 'classic';
 		}
 
-		// Override the defaults withthe user options.
+		// Override the defaults with the user options.
 		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
 			$user_options = get_user_option( 'classic-editor-settings' );
 
@@ -320,6 +335,38 @@ class Classic_Editor {
 		</table>
 		<script>jQuery( 'tr.user-rich-editing-wrap' ).before( jQuery( 'tr.classic-editor-user-options' ) );</script>
 		<?php
+	}
+
+	public static function network_settings() {
+		$is_checked =  ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
+
+		?>
+		<table class="form-table">
+			<tr>
+				<th scope="row"><?php _e( 'Classic Editor', 'classic-editor' ); ?></th>
+				<td>
+				<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
+				<input type="checkbox" name="classic-editor-allow-sites" id="classic-editor-allow-sites" value="allow"<?php if ( $is_checked ) echo ' checked'; ?>>
+				<label for="classic-editor-allow-sites"><?php _e( 'Allow site admins to change settings', 'classic-editor' ); ?></label>
+				<p class="description"><?php _e( 'By default the Block Editor is replaced with the Classic Editor and users cannot switch editors.', 'classic-editor' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	public function save_network_settings() {
+		if (
+			isset( $_POST['classic-editor-network-settings'] ) &&
+			current_user_can( 'manage_network_options' ) &&
+			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'allow-site-admin-settings' )
+		) {
+			if ( isset( $_POST['classic-editor-allow-sites'] ) && $_POST['classic-editor-allow-sites'] === 'allow' ) {
+				update_network_option( null, 'classic-editor-allow-sites', 'allow' );
+			} else {
+				update_network_option( null, 'classic-editor-allow-sites', 'disallow' );
+			}
+		}
 	}
 
 	public static function notice_after_upgrade() {
@@ -717,6 +764,9 @@ class Classic_Editor {
 		}
 		if ( ! get_option( 'classic-editor-allow-users' ) ) {
 			update_option( 'classic-editor-allow-users', 'allow' );
+		}
+		if ( is_multisite() ) {
+			update_network_option( null, 'classic-editor-allow-sites', 'disallow' );
 		}
 	}
 
