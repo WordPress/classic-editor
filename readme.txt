@@ -1,5 +1,5 @@
 === Classic Editor ===
-Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, luciano-croce
+Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
 Tags: editor, classic editor, block editor
 Requires at least: 4.9
 Tested up to: 5.0
