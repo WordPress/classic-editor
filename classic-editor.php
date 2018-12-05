@@ -4,7 +4,7 @@
  *
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
- * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
+ * Description: Enables the WordPress Classic Editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins (add-ons) that extend this screen.
  * Version:     1.0-beta
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
@@ -19,6 +19,9 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * Find # TWEAK tags for changes... (based on latest GitHub version -- Dec, 5 2018 9:48 AM GMT +1)
+ *
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -161,7 +164,7 @@ class Classic_Editor {
 			if ( $settings['allow-users'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
 
-				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
+				// The editor choice will be "remembered" when the post is opened in either Classic Editor or Block Editor. # TWEAK: separate Classic Editor and Block Editor terms for better understanding.
 				if ( 'classic-editor' === $which ) {
 					return true;
 				} elseif ( 'block-editor' === $which ) {
@@ -311,7 +314,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr class="classic-editor-user-options">
-				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Default Editor', 'classic-editor' ); ?></th> <!-- # TWEAK: more detailed action specification Default Editor instead Editor for better understanding -->
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
 				<?php self::settings_1(); ?>
@@ -331,12 +334,11 @@ class Classic_Editor {
 			return;
 		}
 
-		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
-
+		$message = __( 'Classic Editor plugin inhibits use of the new Block Editor if it is not properly configured.', 'classic-editor' ); # TWEAK: 1 - changed the "catastrophic" term "prevents" with the more "friendly-confidential" term "inhibit" 2 - more understanding anc concise description 3 - separation in a new line generic part of the warning with the specific setting action 4 - make the warning compatible with small screen size
 		if ( $settings['allow-users'] && current_user_can( 'edit_posts' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( '<br />Check your settings on %1$sPersonal Options%2$s profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
 		} elseif ( current_user_can( 'manage_options' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
+			$message .= ' ' . sprintf( __( '<br />Check the Classic Editor %1$ssettings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
 		$margin = is_rtl() ? 'margin: 1em 0 0 160px;' : 'margin: 1em 160px 0 0;';
@@ -457,7 +459,7 @@ class Classic_Editor {
 		}
 
 		$id = 'classic-editor-switch-editor';
-		$title = __( 'Editor', 'classic-editor' );
+		$title = __( 'Default Editor', 'classic-editor' ); # TWEAK: for better understanding Default Editor instead of "criptic" Editor.
 		$callback = array( __CLASS__, 'do_meta_box' );
 		/* Add when the Block Editor plugin is enabled.
 		$args = array(
@@ -622,14 +624,14 @@ class Classic_Editor {
 
 		// Link to the Block Editor.
 		$url = remove_query_arg( 'classic-editor', $edit_url );
-		$text = __( 'Block Editor', 'classic-editor' );
+		$text = __( 'Edit (Block Editor)', 'classic-editor' ); # TWEAK: more understandable description of the action of the link
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block Editor', 'classic-editor' ), $title );
 		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		// Link to the Classic Editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
-		$text = __( 'Classic Editor', 'classic-editor' );
+		$text = __( 'Edit (Classic Editor)', 'classic-editor' ); # TWEAK: more understandable description of the action of the link
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic Editor', 'classic-editor' ), $title );
 		$edit_classic = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
