@@ -355,7 +355,7 @@ class Classic_Editor {
 		<?php
 	}
 
-	public function save_network_settings() {
+	public static function save_network_settings() {
 		if (
 			isset( $_POST['classic-editor-network-settings'] ) &&
 			current_user_can( 'manage_network_options' ) &&
