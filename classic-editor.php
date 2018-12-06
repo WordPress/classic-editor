@@ -174,7 +174,7 @@ class Classic_Editor {
 			$settings = self::get_settings();
 
 			if ( $settings['allow-users'] && ! isset( $_GET['classic-editor__forget'] ) ) {
-				$which = get_post_meta( $post_id, 'classic-editor-rememebr', true );
+				$which = get_post_meta( $post_id, 'classic-editor-remember', true );
 
 				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
 				if ( 'classic-editor' === $which ) {
@@ -428,9 +428,9 @@ class Classic_Editor {
 	private static function remember( $post_id, $editor ) {
 		if (
 			use_block_editor_for_post_type( get_post_type( $post_id ) ) &&
-			get_post_meta( $post_id, 'classic-editor-rememebr', true ) !== $editor
+			get_post_meta( $post_id, 'classic-editor-remember', true ) !== $editor
 		) {
-			update_post_meta( $post_id, 'classic-editor-rememebr', $editor );
+			update_post_meta( $post_id, 'classic-editor-remember', $editor );
 		}
 	}
 
@@ -708,7 +708,7 @@ class Classic_Editor {
 			// Forced to Block Editor.
 			$state = '<span class="classic-editor-forced-state">' . __( 'Block Editor', 'classic-editor' ) . '</span>';
 		} else {
-			$last_editor = get_post_meta( $post->ID, 'classic-editor-rememebr', true );
+			$last_editor = get_post_meta( $post->ID, 'classic-editor-remember', true );
 
 			if ( $last_editor ) {
 				$is_classic = ( $last_editor === 'classic-editor' );
