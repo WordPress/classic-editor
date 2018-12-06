@@ -16,10 +16,10 @@ Classic Editor is an official plugin maintained by the WordPress team that resto
 By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
 
 At a glance, this plugin adds the following:
-- Administrators can select the default editor for all users.
-- Administrators can allow users to change their default editor.
-- When allowed, the users can choose which editor to use for each post.
-- Each post opens in the last editor used regardless of who edited it last. This is important for maintaining a consistent experience when editing content.
+* Administrators can select the default editor for all users.
+* Administrators can allow users to change their default editor.
+* When allowed, the users can choose which editor to use for each post.
+* Each post opens in the last editor used regardless of who edited it last. This is important for maintaining a consistent experience when editing content.
 
 The Classic Editor plugin supports WordPress version 4.9, so it can be installed and configured before WordPress is upgraded to version 5.0. In this case, only the admin settings are visible.
 
