@@ -1,13 +1,14 @@
 === Classic Editor ===
 Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
-Tags: editor, classic editor, block editor
+Tags: editor, classic editor, block editor, gutenberg
 Requires at least: 4.9
 Tested up to: 5.0
 Stable tag: 0.5
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports all plugins that extend this screen.
+
+Enables the previous "classic" editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports all plugins that extend this screen.
 
 == Description ==
 
@@ -20,9 +21,9 @@ At a glance, this plugin adds the following:
 - When allowed, the users can choose which editor to use for each post.
 - Each post opens in the last editor used regardless of who edited it last. This is important for maintaining a consistent experience when editing content.
 
-Classic Editor supports WordPress version 4.9, so it can be installed and configured before WordPress is upgraded to version 5.0. In this case, only the admin settings are visible.
+The Classic Editor plugin supports WordPress version 4.9, so it can be installed and configured before WordPress is upgraded to version 5.0. In this case, only the admin settings are visible.
 
-In addition, Classic Editor includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
+In addition, the Classic Editor plugin includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
 
 Classic Editor is an official WordPress plugin, and will be maintained until at least 2022.
 
