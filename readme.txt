@@ -30,13 +30,13 @@ Classic Editor is an official WordPress plugin, and will be maintained until at 
 
 = 1.0 =
 Updated for WordPress 5.0.
-Changed all "Gutenbegr" names/references to "Block Editor".
+Changed all "Gutenberg" names/references to "Block Editor".
 Refreshed the settings UI.
 Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9. Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
 Added support for per-user settings of default editor.
 Added support for admins to set the default editor for the site.
 Added support for admins to allow users to change their default editor.
-Added support for network admins to prevent site admins from changing the defult settings.
+Added support for network admins to prevent site admins from changing the default settings.
 Added support to store the last editor used for each post and open it next time. Enabled when users can choose default editor.
 Added "post editor state" in the listing of posts on the Posts screen. Shows the editor that will be opened for the post. Enabled when users can choose default editor.
 Added `classic_editor_enabled_editors_for_post` and `classic_editor_enabled_editors_for_post_type` filters. Can be used by other plugins to control or override the editor used for a particular post of post type.
