@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.0
+ * Version:     1.2
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -37,7 +37,7 @@ class Classic_Editor {
 	private function __construct() {}
 
 	public static function init_actions() {
-		self::$block_editor = function_exists( 'use_block_editor_for_post_type' );
+		self::$block_editor = has_action( 'enqueue_block_assets' );
 		self::$gutenberg = function_exists( 'gutenberg_can_edit_post_type' );
 
 		if ( ! self::$block_editor && ! self::$gutenberg  ) {
@@ -72,6 +72,10 @@ class Classic_Editor {
 			}
 			if ( self::$gutenberg ) {
 				add_filter( 'gutenberg_can_edit_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
+
+				if ( $settings['editor'] === 'classic' ) {
+					self::remove_gutenberg_hooks( 'some' );
+				}
 			}
 
 			add_filter( 'get_edit_post_link', array( __CLASS__, 'get_edit_post_link' ) );
@@ -111,41 +115,38 @@ class Classic_Editor {
 		if ( self::$block_editor ) {
 			// Show warning on the "What's New" screen (about.php).
 			add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
-
 			// Move the Privacy Page notice back under the title.
 			add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
 		}
 		if ( self::$gutenberg ) {
 			// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
 			remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
+			// These are handled by this plugin.
+			remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
+			remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
+			remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
+			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
+			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
 		}
 	}
 
-	public static function remove_gutenberg_hooks() {
-		// gutenberg.php
+	public static function remove_gutenberg_hooks( $remove = 'all' ) {
 		remove_action( 'admin_menu', 'gutenberg_menu' );
-		remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
 		remove_action( 'admin_init', 'gutenberg_redirect_demo' );
-		remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
-		remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
-		remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
-		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
-		// lib/compat.php
+
+		if ( $remove !== 'all' ) {
+			return;
+		}
+
 		remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
-		remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
-		// lib/register.php
-		remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
-		remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
 		remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
 		remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
-		remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
-		// lib/rest-api.php
+
 		remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
 		remove_action( 'rest_api_init', 'gutenberg_add_taxonomy_visibility_field' );
 		remove_filter( 'rest_request_after_callbacks', 'gutenberg_filter_oembed_result' );
 		remove_filter( 'registered_post_type', 'gutenberg_register_post_prepare_functions' );
-		remove_filter( 'register_post_type_args', 'gutenberg_filter_post_type_labels' );
-		// lib/meta-box-partial-page.php
+
 		remove_action( 'do_meta_boxes', 'gutenberg_meta_box_save', 1000 );
 		remove_action( 'submitpost_box', 'gutenberg_intercept_meta_box_render' );
 		remove_action( 'submitpage_box', 'gutenberg_intercept_meta_box_render' );
@@ -154,13 +155,19 @@ class Classic_Editor {
 		remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
 		remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
 
+		remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
+		remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
+		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' ); // old
+		remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
+		remove_filter( 'register_post_type_args', 'gutenberg_filter_post_type_labels' );
+
 		// Keep
 		// remove_filter( 'wp_kses_allowed_html', 'gutenberg_kses_allowedtags', 10, 2 ); // not needed in 5.0
 		// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
 		// remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
 		// remove_filter( 'the_content', 'do_blocks', 9 );
 		// Continue to disable wpautop inside TinyMCE for posts that were started in Gutenberg.
-		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' ); 
+		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
 		// Keep the tweaks to the PHP wpautop.
 		// add_filter( 'the_content', 'wpautop' );
 		// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
@@ -192,24 +199,50 @@ class Classic_Editor {
 			return self::$settings;
 		}
 
-		if ( is_multisite() && get_site_option( 'classic-editor-allow-sites' ) !== 'allow' ) {
-			// Return default network options.
-			return array(
-				'editor' => 'classic',
-				'allow-users' => false,
-				'hide-settings-ui' => true,
+		if ( is_multisite() ) {
+			$editor = ( get_network_option( null, 'classic-editor-replace' ) === 'block' ) ? 'block' : 'classic';
+			$allow_users = ( get_network_option( null, 'classic-editor-allow-users' ) === 'allow' );
+
+			$defaults = array(
+				'editor' => $editor,
+				'allow-users' => $allow_users,
 			);
-		}
 
-		$allow_users = ( get_option( 'classic-editor-allow-users' ) !== 'disallow' );
-		$option = get_option( 'classic-editor-replace' );
+			/**
+			 *
+			 */
+			$defaults = apply_filters( 'classic_editor_network_default_settings', $defaults );
 
-		// Normalize old options.
-		if ( $option === 'block' || $option === 'no-replace' ) {
-			$editor = 'block';
+			if ( get_network_option( null, 'classic-editor-allow-sites' ) !== 'allow' ) {
+				// Per-site settings are disabled. Return default network options nad hide the settings UI.
+				$defaults['hide-settings-ui'] = true;
+				return $defaults;
+			}
+
+			// Override with the site options.
+			$editor_option = get_option( 'classic-editor-replace' );
+			$allow_users_option = get_option( 'classic-editor-allow-users' );
+
+			if ( $editor_option ) {
+				$defaults['editor'] = $editor_option;
+			}
+			if ( $allow_users_option ) {
+				$defaults['allow-users'] = ( $allow_users_option === 'allow' );
+			}
+
+			$editor = ( isset( $defaults['editor'] ) && $defaults['editor'] === 'block' ) ? 'block' : 'classic';
+			$allow_users = ! empty( $defaults['allow-users'] );
 		} else {
-			// empty( $option ) || $option === 'classic' || $option === 'replace'.
-			$editor = 'classic';
+			$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
+			$option = get_option( 'classic-editor-replace' );
+
+			// Normalize old options.
+			if ( $option === 'block' || $option === 'no-replace' ) {
+				$editor = 'block';
+			} else {
+				// empty( $option ) || $option === 'classic' || $option === 'replace'.
+				$editor = 'classic';
+			}
 		}
 
 		// Override the defaults with the user options.
@@ -842,14 +875,13 @@ class Classic_Editor {
 	 * Set defaults on activation.
 	 */
 	public static function activate() {
-		if ( ! get_option( 'classic-editor-replace' ) ) {
-			update_option( 'classic-editor-replace', 'classic' );
-		}
-		if ( ! get_option( 'classic-editor-allow-users' ) ) {
-			update_option( 'classic-editor-allow-users', 'disallow' );
-		}
 		if ( is_multisite() ) {
-			update_network_option( null, 'classic-editor-allow-sites', 'disallow' );
+			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
+			add_network_option( null, 'classic-editor-replace', 'classic' );
+			add_network_option( null, 'classic-editor-allow-users', 'disallow' );
+		} else {
+			add_option( 'classic-editor-replace', 'classic' );
+			add_option( 'classic-editor-allow-users', 'disallow' );
 		}
 	}
 
@@ -857,8 +889,14 @@ class Classic_Editor {
 	 * Delete the options on uninstall.
 	 */
 	public static function uninstall() {
-		delete_option( 'classic-editor-replace' );
-		delete_option( 'classic-editor-allow-users' );
+		if ( is_multisite() ) {
+			delete_network_option( null, 'classic-editor-allow-sites' );
+			delete_network_option( null, 'classic-editor-replace' );
+			delete_network_option( null, 'classic-editor-allow-users' );
+		} else {
+			delete_option( 'classic-editor-replace' );
+			delete_option( 'classic-editor-allow-users' );
+		}
 	}
 }
 

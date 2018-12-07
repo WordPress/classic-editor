@@ -1,9 +1,9 @@
 === Classic Editor ===
 Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
 Tags: editor, classic editor, block editor, gutenberg
-Requires at least: 5.0
+Requires at least: 4.9
 Tested up to: 5.0
-Stable tag: 0.5
+Stable tag: 1.1
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
