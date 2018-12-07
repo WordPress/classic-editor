@@ -1,7 +1,7 @@
 === Classic Editor ===
 Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
 Tags: editor, classic editor, block editor, gutenberg
-Requires at least: 4.9
+Requires at least: 5.0
 Tested up to: 5.0
 Stable tag: 0.5
 Requires PHP: 5.2.4
@@ -16,6 +16,7 @@ Classic Editor is an official plugin maintained by the WordPress team that resto
 By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
 
 At a glance, this plugin adds the following:
+
 * Administrators can select the default editor for all users.
 * Administrators can allow users to change their default editor.
 * When allowed, the users can choose which editor to use for each post.
@@ -28,6 +29,9 @@ In addition, the Classic Editor plugin includes several filters that let other p
 Classic Editor is an official WordPress plugin, and will be maintained until at least 2022.
 
 == Changelog ==
+
+= 1.1 =
+Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
 
 = 1.0 =
 Updated for WordPress 5.0.
