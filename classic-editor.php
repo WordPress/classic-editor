@@ -126,8 +126,19 @@ class Classic_Editor {
 		remove_action( 'admin_menu', 'gutenberg_menu' );
 		remove_action( 'admin_notices', 'gutenberg_build_files_notice' );
 		remove_action( 'admin_init', 'gutenberg_redirect_demo' );
+		remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
+		remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
+		remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
+		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
 		// lib/compat.php
 		remove_filter( 'wp_refresh_nonces', 'gutenberg_add_rest_nonce_to_heartbeat_response_headers' );
+		remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
+		// lib/register.php
+		remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
+		remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
+		remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
+		remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
+		remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 		// lib/rest-api.php
 		remove_action( 'rest_api_init', 'gutenberg_register_rest_routes' );
 		remove_action( 'rest_api_init', 'gutenberg_add_taxonomy_visibility_field' );
@@ -143,29 +154,13 @@ class Classic_Editor {
 		remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
 		remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
 
-		// gutenberg.php
-		remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
-		remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
-		remove_filter( 'body_class', 'gutenberg_add_responsive_body_class' );
-		remove_filter( 'admin_url', 'gutenberg_modify_add_new_button_url' );
 		// Keep
 		// remove_filter( 'wp_kses_allowed_html', 'gutenberg_kses_allowedtags', 10, 2 ); // not needed in 5.0
 		// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
-		// lib/compat.php
-		remove_action( 'admin_enqueue_scripts', 'gutenberg_check_if_classic_needs_warning_about_blocks' );
-		// lib/register.php
-		remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
-		remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
-		remove_filter( 'get_edit_post_link', 'gutenberg_revisions_link_to_editor' );
-		remove_filter( 'wp_prepare_revision_for_js', 'gutenberg_revisions_restore' );
-		remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
-		// lib/plugin-compat.php
-		remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
-		// Keep
-		// lib/blocks.php
+		// remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
 		// remove_filter( 'the_content', 'do_blocks', 9 );
 		// Continue to disable wpautop inside TinyMCE for posts that were started in Gutenberg.
-		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
+		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' ); 
 		// Keep the tweaks to the PHP wpautop.
 		// add_filter( 'the_content', 'wpautop' );
 		// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
