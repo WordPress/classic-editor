@@ -273,11 +273,11 @@ class Classic_Editor {
 		<div class="classic-editor-options">
 			<p>
 				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
-				<label for="classic-editor-classic"><?php _e( 'Classic Editor', 'classic-editor' ); ?></label>
+				<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 			<p>
 				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
-				<label for="classic-editor-block"><?php _e( 'Block Editor', 'classic-editor' ); ?></label>
+				<label for="classic-editor-block"><?php _ex( 'Block Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 		</div>
 		<script>
@@ -343,7 +343,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr>
-				<th scope="row"><?php _e( 'Classic Editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
 				<input type="checkbox" name="classic-editor-allow-sites" id="classic-editor-allow-sites" value="allow"<?php if ( $is_checked ) echo ' checked'; ?>>
@@ -674,14 +674,14 @@ class Classic_Editor {
 
 		// Link to the Block Editor.
 		$url = remove_query_arg( 'classic-editor', $edit_url );
-		$text = __( 'Block Editor', 'classic-editor' );
+		$text = _x( 'Block Editor', 'Editor Name', 'classic-editor' );
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block Editor', 'classic-editor' ), $title );
 		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		// Link to the Classic Editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
-		$text = __( 'Classic Editor', 'classic-editor' );
+		$text = _x( 'Classic Editor', 'Editor Name', 'classic-editor' );
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic Editor', 'classic-editor' ), $title );
 		$edit_classic = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
@@ -708,10 +708,10 @@ class Classic_Editor {
 			return $post_states;
 		} elseif ( $editors['classic_editor'] && ! $editors['block_editor'] ) {
 			// Forced to Classic Editor.
-			$state = '<span class="classic-editor-forced-state">' . __( 'Classic Editor', 'classic-editor' ) . '</span>';
+			$state = '<span class="classic-editor-forced-state">' . _x( 'Classic Editor', 'Editor Name', 'classic-editor' ) . '</span>';
 		} elseif ( ! $editors['classic_editor'] && $editors['block_editor'] ) {
 			// Forced to Block Editor.
-			$state = '<span class="classic-editor-forced-state">' . __( 'Block Editor', 'classic-editor' ) . '</span>';
+			$state = '<span class="classic-editor-forced-state">' . _x( 'Block Editor', 'Editor Name', 'classic-editor' ) . '</span>';
 		} else {
 			$last_editor = get_post_meta( $post->ID, 'classic-editor-remember', true );
 
@@ -722,7 +722,7 @@ class Classic_Editor {
 				$is_classic = ( $settings['editor'] === 'classic' );
 			}
 
-			$state = $is_classic ? __( 'Classic Editor', 'classic-editor' ) : __( 'Block Editor', 'classic-editor' );
+			$state = $is_classic ? _x( 'Classic Editor', 'Editor Name', 'classic-editor' ) : _x( 'Block Editor', 'Editor Name', 'classic-editor' );
 		}
 
 		(array) $post_states[] = $state;
