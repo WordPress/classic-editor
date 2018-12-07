@@ -449,6 +449,11 @@ class Classic_Editor {
 		$settings = self::get_settings();
 		$editors = self::get_enabled_editors_for_post( $post );
 
+		// If no editor is supported, pass through `$use_block_editor`.
+		if ( ! $editors['block_editor'] && ! $editors['classic_editor'] ) {
+			return $use_block_editor;
+		}
+
 		// Open the default editor when no $post and for "Add New" links.
 		if ( empty( $post->ID ) || $post->post_status === 'auto-draft' ) {
 			if ( $settings['editor'] === 'classic' ) {
