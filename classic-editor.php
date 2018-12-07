@@ -183,7 +183,7 @@ class Classic_Editor {
 		if ( is_array( $settings ) ) {
 			return array(
 				'editor' => ( isset( $settings['editor'] ) && $settings['editor'] === 'block' ) ? 'block' : 'classic',
-				'allow-users' => ( ! isset( $settings['allow-users'] ) || $settings['allow-users'] ), // Allow by default.
+				'allow-users' => ! empty( $settings['allow-users'] ),
 				'hide-settings-ui' => true,
 			);
 		}
@@ -846,7 +846,7 @@ class Classic_Editor {
 			update_option( 'classic-editor-replace', 'classic' );
 		}
 		if ( ! get_option( 'classic-editor-allow-users' ) ) {
-			update_option( 'classic-editor-allow-users', 'allow' );
+			update_option( 'classic-editor-allow-users', 'disallow' );
 		}
 		if ( is_multisite() ) {
 			update_network_option( null, 'classic-editor-allow-sites', 'disallow' );
