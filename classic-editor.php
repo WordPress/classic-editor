@@ -326,7 +326,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr class="classic-editor-user-options">
-				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Default editor for current user', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
 				<?php self::settings_1(); ?>
