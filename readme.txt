@@ -22,48 +22,53 @@ At a glance, this plugin adds the following:
 * When allowed, the users can choose which editor to use for each post.
 * Each post opens in the last editor used regardless of who edited it last. This is important for maintaining a consistent experience when editing content.
 
-The Classic Editor plugin supports WordPress version 4.9, so it can be installed and configured before WordPress is upgraded to version 5.0. In this case, only the admin settings are visible.
-
 In addition, the Classic Editor plugin includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
 
 Classic Editor is an official WordPress plugin, and will be maintained until at least 2022.
 
 == Changelog ==
 
+= 1.2 =
+* Fixed switching editors from the Add New (post) screen before a draft post is saved.
+* Fixed typo that was appending the edit URL to the `classic-editor` query var.
+* Changed the default value of the option to allow users to switch editors to false.
+* Added disabling of the Gutenberg plugin and lowered the required WordPress version to 4.9.
+* Added `classic_editor_network_default_settings` filter.
+
 = 1.1 =
 Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
 
 = 1.0 =
-Updated for WordPress 5.0.
-Changed all "Gutenberg" names/references to "Block Editor".
-Refreshed the settings UI.
-Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9. Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
-Added support for per-user settings of default editor.
-Added support for admins to set the default editor for the site.
-Added support for admins to allow users to change their default editor.
-Added support for network admins to prevent site admins from changing the default settings.
-Added support to store the last editor used for each post and open it next time. Enabled when users can choose default editor.
-Added "post editor state" in the listing of posts on the Posts screen. Shows the editor that will be opened for the post. Enabled when users can choose default editor.
-Added `classic_editor_enabled_editors_for_post` and `classic_editor_enabled_editors_for_post_type` filters. Can be used by other plugins to control or override the editor used for a particular post of post type.
-Added `classic_editor_plugin_settings` filter. Can be used by other plugins to override the settings and disable the settings UI.
+* Updated for WordPress 5.0.
+* Changed all "Gutenberg" names/references to "Block Editor".
+* Refreshed the settings UI.
+* Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9. Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
+* Added support for per-user settings of default editor.
+* Added support for admins to set the default editor for the site.
+* Added support for admins to allow users to change their default editor.
+* Added support for network admins to prevent site admins from changing the default settings.
+* Added support to store the last editor used for each post and open it next time. Enabled when users can choose default editor.
+* Added "post editor state" in the listing of posts on the Posts screen. Shows the editor that will be opened for the post. Enabled when users can choose default editor.
+* Added `classic_editor_enabled_editors_for_post` and `classic_editor_enabled_editors_for_post_type` filters. Can be used by other plugins to control or override the editor used for a particular post of post type.
+* Added `classic_editor_plugin_settings` filter. Can be used by other plugins to override the settings and disable the settings UI.
 
 = 0.5 =
-Updated for Gutenberg 4.1 and WordPress 5.0-beta1.
-Removed some functionality that now exists in Gutenberg.
-Fixed redirecting back to the CLassic editor after looking at post revisions.
+* Updated for Gutenberg 4.1 and WordPress 5.0-beta1.
+* Removed some functionality that now exists in Gutenberg.
+* Fixed redirecting back to the CLassic editor after looking at post revisions.
 
 = 0.4 =
-Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
-Fixed to always show the settings and the settings link in the plugins list table.
-Updated the readme text.
+* Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
+* Fixed to always show the settings and the settings link in the plugins list table.
+* Updated the readme text.
 
 = 0.3 =
-Updated the option from a checkbox to couple of radio buttons, seems clearer. Thanks to @designsimply for the label text suggestions.
-Some general updates and cleanup.
+* Updated the option from a checkbox to couple of radio buttons, seems clearer. Thanks to @designsimply for the label text suggestions.
+* Some general updates and cleanup.
 
 = 0.2 =
-Update for Gutenberg 1.9.
-Remove warning and automatic deactivation when Gutenberg is not active.
+* Update for Gutenberg 1.9.
+* Remove warning and automatic deactivation when Gutenberg is not active.
 
 = 0.1 =
 Initial release.

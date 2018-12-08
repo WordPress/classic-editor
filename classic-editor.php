@@ -166,24 +166,24 @@ class Classic_Editor {
 		// remove_filter( 'bulk_actions-edit-wp_block', 'gutenberg_block_bulk_actions' );
 		// remove_filter( 'wp_insert_post_data', 'gutenberg_remove_wpcom_markdown_support' );
 		// remove_filter( 'the_content', 'do_blocks', 9 );
-		// Continue to disable wpautop inside TinyMCE for posts that were started in Gutenberg.
-		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
-		// Keep the tweaks to the PHP wpautop.
-		// add_filter( 'the_content', 'wpautop' );
-		// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
 		// remove_action( 'init', 'gutenberg_register_post_types' );
+
+		// Continue to manage wpautop for posts that were edited in Gutenberg.
+		// remove_filter( 'wp_editor_settings', 'gutenberg_disable_editor_settings_wpautop' );
+		// remove_filter( 'the_content', 'gutenberg_wpautop', 8 );
+
 	}
 
 	private static function get_settings( $refresh = 'no' ) {
 		/**
-		 * Can be used to override the plugin's settings and hide the settings UI.
+		 * Can be used to override the plugin's settings. Always hides the settings UI when used (as users cannot change the settings).
 		 *
 		 * Has to return an associative array with two keys.
 		 * The defaults are:
 		 *   'editor' => 'classic', // Accepted values: 'classic', 'block'.
-		 *   'allow-users' => true,
+		 *   'allow-users' => false,
 		 *
-		 * Note: using this filter always hides the settings UI (as it overrides the user's choices).
+		 * @param boolean To override the settings return an array with the above keys.
 		 */
 		$settings = apply_filters( 'classic_editor_plugin_settings', false );
 
@@ -200,16 +200,15 @@ class Classic_Editor {
 		}
 
 		if ( is_multisite() ) {
-			$editor = ( get_network_option( null, 'classic-editor-replace' ) === 'block' ) ? 'block' : 'classic';
-			$allow_users = ( get_network_option( null, 'classic-editor-allow-users' ) === 'allow' );
-
 			$defaults = array(
-				'editor' => $editor,
-				'allow-users' => $allow_users,
+				'editor' => 'classic',
+				'allow-users' => false,
 			);
 
 			/**
+			 * Filters the default network options.
 			 *
+			 * @param array $defaults The default options array. See `classic_editor_plugin_settings` for supported keys and values.
 			 */
 			$defaults = apply_filters( 'classic_editor_network_default_settings', $defaults );
 
@@ -553,9 +552,13 @@ class Classic_Editor {
 			return $use_block_editor;
 		}
 
-		// Open the default editor when no $post and for "Add New" links.
+		// Open the default editor when no $post and for "Add New" links,
+		// or the alternate editor when the user is switching editors.
 		if ( empty( $post->ID ) || $post->post_status === 'auto-draft' ) {
-			if ( $settings['editor'] === 'classic' ) {
+			if (
+				( $settings['editor'] === 'classic' && ! isset( $_GET['classic-editor__forget'] ) ) ||  // Add New
+				( isset( $_GET['classic-editor'] ) && isset( $_GET['classic-editor__forget'] ) ) // Switch to Classic Editor when no draft post.
+			) {
 				$use_block_editor = false;
 			}
 		} elseif ( self::is_classic( $post->ID ) ) {
@@ -565,7 +568,7 @@ class Classic_Editor {
 		// Enforce the editor if set by plugins.
 		if ( $use_block_editor && ! $editors['block_editor'] ) {
 			$use_block_editor = false;
-		} elseif ( ! $use_block_editor && ! $editors['classic_editor'] ) {
+		} elseif ( ! $use_block_editor && ! $editors['classic_editor'] && $editors['block_editor'] ) {
 			$use_block_editor = true;
 		}
 
@@ -624,7 +627,7 @@ class Classic_Editor {
 
 		if ( did_action( 'enqueue_block_editor_assets' ) ) {
 			// Block Editor is loading, switch to Classic Editor.
-			$edit_url = add_query_arg( 'classic-editor', $edit_url );
+			$edit_url = add_query_arg( 'classic-editor', '', $edit_url );
 			$link_text = __( 'Switch to Classic Editor', 'classic-editor' );
 		} else {
 			// Switch to Block Editor.
@@ -877,12 +880,10 @@ class Classic_Editor {
 	public static function activate() {
 		if ( is_multisite() ) {
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
-			add_network_option( null, 'classic-editor-replace', 'classic' );
-			add_network_option( null, 'classic-editor-allow-users', 'disallow' );
-		} else {
-			add_option( 'classic-editor-replace', 'classic' );
-			add_option( 'classic-editor-allow-users', 'disallow' );
 		}
+
+		add_option( 'classic-editor-replace', 'classic' );
+		add_option( 'classic-editor-allow-users', 'disallow' );
 	}
 
 	/**
@@ -891,12 +892,10 @@ class Classic_Editor {
 	public static function uninstall() {
 		if ( is_multisite() ) {
 			delete_network_option( null, 'classic-editor-allow-sites' );
-			delete_network_option( null, 'classic-editor-replace' );
-			delete_network_option( null, 'classic-editor-allow-users' );
-		} else {
-			delete_option( 'classic-editor-replace' );
-			delete_option( 'classic-editor-allow-users' );
 		}
+
+		delete_option( 'classic-editor-replace' );
+		delete_option( 'classic-editor-allow-users' );
 	}
 }
 
