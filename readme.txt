@@ -31,6 +31,7 @@ Classic Editor is an official WordPress plugin, and will be maintained until at 
 = 1.2 =
 * Fixed switching editors from the Add New (post) screen before a draft post is saved.
 * Fixed typo that was appending the edit URL to the `classic-editor` query var.
+* Changed detecting of WordPress 5.0 to not use version check. Fixes a bug when testing 5.1-alpha.
 * Changed the default value of the option to allow users to switch editors to false.
 * Added disabling of the Gutenberg plugin and lowered the required WordPress version to 4.9.
 * Added `classic_editor_network_default_settings` filter.

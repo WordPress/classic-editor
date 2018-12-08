@@ -31,18 +31,12 @@ class Classic_Editor {
 	const plugin_version = 1.0;
 	private static $settings;
 	private static $supported_post_types = array();
-	private static $block_editor = false;
-	private static $gutenberg = false;
 
 	private function __construct() {}
 
 	public static function init_actions() {
-		self::$block_editor = has_action( 'enqueue_block_assets' );
-		self::$gutenberg = function_exists( 'gutenberg_can_edit_post_type' );
-
-		if ( ! self::$block_editor && ! self::$gutenberg  ) {
-			return;
-		}
+		$block_editor = has_action( 'enqueue_block_assets' );
+		$gutenberg = function_exists( 'gutenberg_can_edit_post_type' );
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
@@ -66,11 +60,15 @@ class Classic_Editor {
 			}
 		}
 
+		if ( ! $block_editor && ! $gutenberg  ) {
+			return;
+		}
+
 		if ( $settings['allow-users'] ) {
-			if ( self::$block_editor ) {
+			if ( $block_editor ) {
 				add_filter( 'use_block_editor_for_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 			}
-			if ( self::$gutenberg ) {
+			if ( $gutenberg ) {
 				add_filter( 'gutenberg_can_edit_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 
 				if ( $settings['editor'] === 'classic' ) {
@@ -98,11 +96,11 @@ class Classic_Editor {
 			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_block_editor_scripts' ) );
 		} else {
 			if ( $settings['editor'] === 'classic' ) {
-				if ( self::$block_editor ) {
+				if ( $block_editor ) {
 					// Consider disabling other Block Editor functionality.
 					add_filter( 'use_block_editor_for_post_type', '__return_false', 100 );
 				}
-				if ( self::$gutenberg ) {
+				if ( $gutenberg ) {
 					add_filter( 'gutenberg_can_edit_post_type', '__return_false', 100 );
 					self::remove_gutenberg_hooks();
 				}
@@ -112,13 +110,13 @@ class Classic_Editor {
 			}
 		}
 
-		if ( self::$block_editor ) {
+		if ( $block_editor ) {
 			// Show warning on the "What's New" screen (about.php).
 			add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 			// Move the Privacy Page notice back under the title.
 			add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
 		}
-		if ( self::$gutenberg ) {
+		if ( $gutenberg ) {
 			// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
 			remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
 			// These are handled by this plugin.
@@ -639,7 +637,7 @@ class Classic_Editor {
 		$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 
 		?>
-		<p style="margin: 1em;"><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo $link_text; ?></a></p>
+		<p style="margin: 1em 0;"><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo $link_text; ?></a></p>
 		<?php
 	}
 
@@ -682,9 +680,9 @@ class Classic_Editor {
 	private static function can_edit_post_type( $post_type ) {
 		$can_edit = false;
 
-		if ( self::$gutenberg ) {
+		if ( function_exists( 'gutenberg_can_edit_post_type' ) ) {
 			$can_edit = gutenberg_can_edit_post_type( $post_type );
-		} elseif ( self::$block_editor ) {
+		} elseif ( function_exists( 'use_block_editor_for_post_type' ) ) {
 			$can_edit = use_block_editor_for_post_type( $post_type );
 		}
 
