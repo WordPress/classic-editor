@@ -56,7 +56,7 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 = 0.5 =
 * Updated for Gutenberg 4.1 and WordPress 5.0-beta1.
 * Removed some functionality that now exists in Gutenberg.
-* Fixed redirecting back to the CLassic editor after looking at post revisions.
+* Fixed redirecting back to the Classic Editor after looking at post revisions.
 
 = 0.4 =
 * Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
