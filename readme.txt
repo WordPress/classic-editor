@@ -1,6 +1,6 @@
 === Classic Editor ===
-Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
-Tags: editor, classic editor, block editor, gutenberg
+Contributors: azaozz, luciano-croce, alexislloyd, chanthaboune, desrosj, melchoyce, pento, youknowriad
+Tags: editor, classic editor, block editor, gutenberg, blocks
 Requires at least: 5.0
 Tested up to: 5.0
 Stable tag: 1.1
@@ -22,7 +22,7 @@ At a glance, this plugin adds the following:
 * When allowed, the users can choose which editor to use for each post.
 * Each post opens in the last editor used regardless of who edited it last. This is important for maintaining a consistent experience when editing content.
 
-The Classic Editor plugin supports WordPress version 4.9, so it can be installed and configured before WordPress is upgraded to version 5.0. In this case, only the admin settings are visible.
+The Classic Editor plugin supports WordPress 4.9+ so it can be installed and configured before WordPress is upgraded to version 5.0+ In this case, only the admin settings are visible.
 
 In addition, the Classic Editor plugin includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
 
@@ -37,7 +37,7 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 Updated for WordPress 5.0.
 Changed all "Gutenberg" names/references to "Block Editor".
 Refreshed the settings UI.
-Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9. Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
+Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9+ Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
 Added support for per-user settings of default editor.
 Added support for admins to set the default editor for the site.
 Added support for admins to allow users to change their default editor.
