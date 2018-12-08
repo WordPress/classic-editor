@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.0;
+	const plugin_version = 1.2;
 	private static $settings;
 	private static $supported_post_types = array();
 
