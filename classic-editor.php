@@ -468,16 +468,22 @@ class Classic_Editor {
 		global $pagenow;
 		$settings = self::get_settings();
 
-		if ( $pagenow !== 'about.php' || $settings['hide-settings-ui'] || $settings['editor'] !== 'classic' ) {
-			// No need to show when the settings are preset from another plugin or when not replacing the Block Editor.
+		if (
+			$pagenow !== 'about.php' ||
+			$settings['hide-settings-ui'] ||
+			$settings['editor'] === 'block' || 
+			$settings['allow-users'] ||
+			! current_user_can( 'edit_posts' )
+		) {
+			// No need to show when the user cannot edit posts,
+			// the settings are preset from another plugin,
+			// or when not replacing the Block Editor.
 			return;
 		}
 
 		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
 
-		if ( $settings['allow-users'] && current_user_can( 'edit_posts' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s on your User Profile page.', 'classic-editor' ), '<a href="profile.php#classic-editor-options">', '</a>' );
-		} elseif ( current_user_can( 'manage_options' ) ) {
+		if ( current_user_can( 'manage_options' ) ) {
 			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
 		}
 
