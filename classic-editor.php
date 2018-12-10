@@ -60,6 +60,9 @@ class Classic_Editor {
 			}
 		}
 
+		// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
+		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
+
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
 		}
@@ -117,8 +120,6 @@ class Classic_Editor {
 			add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
 		}
 		if ( $gutenberg ) {
-			// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
-			remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
 			// These are handled by this plugin.
 			remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
 			remove_action( 'admin_print_scripts-edit.php', 'gutenberg_replace_default_add_new_button' );
