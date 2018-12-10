@@ -30,6 +30,7 @@ Classic Editor is an official WordPress plugin, and will be maintained until at 
 
 = 1.3 =
 * Fixed removal of the "Try Gutenberg" dashboard widget.
+* Fixed condition for displaying of the after upgrade notice on the "What's New" screen. Shown when the Classic Editor is selected and users cannot switch editors.
 
 = 1.2 =
 * Fixed switching editors from the Add New (post) screen before a draft post is saved.
