@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.3
+ * Version:     1.4-alpha
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.2;
+	const plugin_version = 1.4;
 	private static $settings;
 	private static $supported_post_types = array();
 
@@ -616,7 +616,7 @@ class Classic_Editor {
 		}
 
 		$id = 'classic-editor-switch-editor';
-		$title = __( 'Editor', 'classic-editor' );
+		$title = __( 'Default Editor', 'classic-editor' );
 		$callback = array( __CLASS__, 'do_meta_box' );
 		/* Add when the Block Editor plugin is enabled.
 		$args = array(
