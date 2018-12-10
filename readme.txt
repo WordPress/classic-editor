@@ -41,7 +41,7 @@ Classic Editor is an official WordPress plugin, and will be maintained until at 
 * Added `classic_editor_network_default_settings` filter.
 
 = 1.1 =
-Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
+* Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
 
 = 1.0 =
 * Updated for WordPress 5.0.
@@ -76,7 +76,7 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 * Remove warning and automatic deactivation when Gutenberg is not active.
 
 = 0.1 =
-Initial release.
+* Initial release.
 
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
