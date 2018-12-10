@@ -3,7 +3,7 @@ Contributors: azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, 
 Tags: editor, classic editor, block editor, gutenberg
 Requires at least: 4.9
 Tested up to: 5.0
-Stable tag: 1.1
+Stable tag: 1.2
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -27,6 +27,9 @@ In addition, the Classic Editor plugin includes several filters that let other p
 Classic Editor is an official WordPress plugin, and will be maintained until at least 2022.
 
 == Changelog ==
+
+= 1.3 =
+* Fixed removal of the "Try Gutenberg" dashboard widget.
 
 = 1.2 =
 * Fixed switching editors from the Add New (post) screen before a draft post is saved.
