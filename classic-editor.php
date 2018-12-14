@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.3
+ * Version:     1.4
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -200,7 +200,7 @@ class Classic_Editor {
 
 		if ( is_multisite() ) {
 			$defaults = array(
-				'editor' => 'classic',
+				'editor' => get_network_option( null, 'classic-editor-replace' ) === 'block' ? 'block' : 'classic',
 				'allow-users' => false,
 			);
 
@@ -434,17 +434,33 @@ class Classic_Editor {
 	}
 
 	public static function network_settings() {
-		$is_checked =  ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
+		$editor = get_network_option( null, 'classic-editor-replace' );
+		$is_checked = ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
 
 		?>
+		<h2><?php _ex( 'Editor Settings', 'classic-editor' ); ?></h2>
 		<table class="form-table">
+			<?php wp_nonce_field( 'editor-settings', 'classic-editor-network-settings' ); ?>
 			<tr>
-				<th scope="row"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Default editor for all sites', 'classic-editor' ); ?></th>
 				<td>
-				<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
-				<input type="checkbox" name="classic-editor-allow-sites" id="classic-editor-allow-sites" value="allow"<?php if ( $is_checked ) echo ' checked'; ?>>
-				<label for="classic-editor-allow-sites"><?php _e( 'Allow site admins to change settings', 'classic-editor' ); ?></label>
-				<p class="description"><?php _e( 'By default the Block Editor is replaced with the Classic Editor and users cannot switch editors.', 'classic-editor' ); ?></p>
+					<p>
+						<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $editor !== 'block' ) echo ' checked'; ?> />
+						<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
+					</p>
+					<p>
+						<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $editor === 'block' ) echo ' checked'; ?> />
+						<label for="classic-editor-block"><?php _ex( 'Block Editor', 'Editor Name', 'classic-editor' ); ?></label>
+					</p>
+					<p class="description error"><?php _e( 'Note: Setting the default network editor to Block Editor while disallowing site admins to change settings, defeats the purpose of these options.', 'classic-editor' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php _e( 'Change settings', 'classic-editor' ); ?></th>
+				<td>
+					<input type="checkbox" name="classic-editor-allow-sites" id="classic-editor-allow-sites" value="allow"<?php if ( $is_checked ) echo ' checked'; ?>>
+					<label for="classic-editor-allow-sites"><?php _e( 'Allow site admins to change settings', 'classic-editor' ); ?></label>
+					<p class="description"><?php _e( 'By default the Block Editor is replaced with the Classic Editor and users cannot switch editors.', 'classic-editor' ); ?></p>
 				</td>
 			</tr>
 		</table>
@@ -455,8 +471,13 @@ class Classic_Editor {
 		if (
 			isset( $_POST['classic-editor-network-settings'] ) &&
 			current_user_can( 'manage_network_options' ) &&
-			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'allow-site-admin-settings' )
+			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'editor-settings' )
 		) {
+			if ( isset( $_POST['classic-editor-replace'] ) && $_POST['classic-editor-replace'] === 'block' ) {
+				update_network_option( null, 'classic-editor-replace', 'block' );
+			} else {
+				update_network_option( null, 'classic-editor-replace', 'classic' );
+			}
 			if ( isset( $_POST['classic-editor-allow-sites'] ) && $_POST['classic-editor-allow-sites'] === 'allow' ) {
 				update_network_option( null, 'classic-editor-allow-sites', 'allow' );
 			} else {
@@ -472,7 +493,7 @@ class Classic_Editor {
 		if (
 			$pagenow !== 'about.php' ||
 			$settings['hide-settings-ui'] ||
-			$settings['editor'] === 'block' || 
+			$settings['editor'] === 'block' ||
 			$settings['allow-users'] ||
 			! current_user_can( 'edit_posts' )
 		) {
@@ -884,6 +905,7 @@ class Classic_Editor {
 	 */
 	public static function activate() {
 		if ( is_multisite() ) {
+			add_network_option( null, 'classic-editor-replace', 'classic' );
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
 		}
 
@@ -896,6 +918,7 @@ class Classic_Editor {
 	 */
 	public static function uninstall() {
 		if ( is_multisite() ) {
+			delete_network_option( null, 'classic-editor-replace' );
 			delete_network_option( null, 'classic-editor-allow-sites' );
 		}
 
