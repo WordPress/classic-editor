@@ -218,8 +218,8 @@ class Classic_Editor {
 			}
 
 			// Override with the site options.
-			$editor_option = get_option( 'classic-editor-replace' );
-			$allow_users_option = get_option( 'classic-editor-allow-users' );
+			$editor_option = get_option( 'classic_editor_replace' );
+			$allow_users_option = get_option( 'classic_editor_allow_users' );
 
 			if ( $editor_option ) {
 				$defaults['editor'] = $editor_option;
@@ -231,8 +231,8 @@ class Classic_Editor {
 			$editor = ( isset( $defaults['editor'] ) && $defaults['editor'] === 'block' ) ? 'block' : 'classic';
 			$allow_users = ! empty( $defaults['allow-users'] );
 		} else {
-			$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
-			$option = get_option( 'classic-editor-replace' );
+			$allow_users = ( get_option( 'classic_editor_allow_users' ) === 'allow' );
+			$option = get_option( 'classic_editor_replace' );
 
 			// Normalize old options.
 			if ( $option === 'block' || $option === 'no-replace' ) {
@@ -306,30 +306,31 @@ class Classic_Editor {
 	}
 
 	public static function register_settings() {
-		// Add an option to Settings -> Writing
-		register_setting( 'writing', 'classic-editor-replace', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
-		) );
-
-		register_setting( 'writing', 'classic-editor-allow-users', array(
-			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
-		) );
-
 		add_option_whitelist( array(
-			'writing' => array( 'classic-editor-replace', 'classic-editor-allow-users' ),
+			'writing' => array( 'classic_editor_replace', 'classic_editor_allow_users' ),
 		) );
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
 		$heading_2 = __( 'Allow users to switch editors', 'classic-editor' );
 
-		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
-		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+		add_settings_field( 'classic_editor_replace', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic_editor_allow_users', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+		
+		// Add an option to Settings -> Writing
+		register_setting( 'writing', 'classic_editor_replace', array(
+			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
+		) );
+
+		register_setting( 'writing', 'classic_editor_allow_users', array(
+			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
+		) );
+
 	}
 
 	public static function save_user_settings( $user_id ) {
 		if (
 			isset( $_POST['classic-editor-user-settings'] ) &&
-			isset( $_POST['classic-editor-replace'] ) &&
+			isset( $_POST['classic_editor_replace'] ) &&
 			wp_verify_nonce( $_POST['classic-editor-user-settings'], 'allow-user-settings' )
 		) {
 			$user_id = (int) $user_id;
@@ -338,7 +339,7 @@ class Classic_Editor {
 				return;
 			}
 
-			$editor = self::validate_option_editor( $_POST['classic-editor-replace'] );
+			$editor = self::validate_option_editor( $_POST['classic_editor_replace'] );
 			update_user_option( $user_id, 'classic-editor-settings', $editor );
 		}
 	}
@@ -364,15 +365,15 @@ class Classic_Editor {
 
 	public static function settings_1() {
 		$settings = self::get_settings( 'refresh' );
-
+		
 		?>
 		<div class="classic-editor-options">
 			<p>
-				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
+				<input type="radio" name="classic_editor_replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 			<p>
-				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
+				<input type="radio" name="classic_editor_replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-block"><?php _ex( 'Block Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 		</div>
@@ -392,11 +393,11 @@ class Classic_Editor {
 		?>
 		<div class="classic-editor-options">
 			<p>
-				<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+				<input type="radio" name="classic_editor_allow_users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-allow"><?php _e( 'Yes', 'classic-editor' ); ?></label>
 			</p>
 			<p>
-				<input type="radio" name="classic-editor-allow-users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+				<input type="radio" name="classic_editor_allow_users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-disallow"><?php _e( 'No', 'classic-editor' ); ?></label>
 			</p>
 		</div>
@@ -887,8 +888,8 @@ class Classic_Editor {
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
 		}
 
-		add_option( 'classic-editor-replace', 'classic' );
-		add_option( 'classic-editor-allow-users', 'disallow' );
+		add_option( 'classic_editor_replace', 'classic' );
+		add_option( 'classic_editor_allow_users', 'disallow' );
 	}
 
 	/**
@@ -899,8 +900,8 @@ class Classic_Editor {
 			delete_network_option( null, 'classic-editor-allow-sites' );
 		}
 
-		delete_option( 'classic-editor-replace' );
-		delete_option( 'classic-editor-allow-users' );
+		delete_option( 'classic_editor_replace' );
+		delete_option( 'classic_editor_allow_users' );
 	}
 }
 
