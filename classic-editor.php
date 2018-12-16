@@ -438,7 +438,7 @@ class Classic_Editor {
 		$is_checked = ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
 
 		?>
-		<h2><?php _ex( 'Editor Settings', 'classic-editor' ); ?></h2>
+		<h2><?php _e( 'Editor Settings', 'classic-editor' ); ?></h2>
 		<table class="form-table">
 			<?php wp_nonce_field( 'editor-settings', 'classic-editor-network-settings' ); ?>
 			<tr>
