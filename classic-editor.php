@@ -212,7 +212,7 @@ class Classic_Editor {
 			$defaults = apply_filters( 'classic_editor_network_default_settings', $defaults );
 
 			if ( get_network_option( null, 'classic-editor-allow-sites' ) !== 'allow' ) {
-				// Per-site settings are disabled. Return default network options nad hide the settings UI.
+				// Per-site settings are disabled. Return default network options and hide the settings UI.
 				$defaults['hide-settings-ui'] = true;
 				return $defaults;
 			}
