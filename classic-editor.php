@@ -150,7 +150,7 @@ class Classic_Editor {
 		remove_action( 'submitpost_box', 'gutenberg_intercept_meta_box_render' );
 		remove_action( 'submitpage_box', 'gutenberg_intercept_meta_box_render' );
 		remove_action( 'edit_page_form', 'gutenberg_intercept_meta_box_render' );
-		remove_action( 'edit_form_advanced', 'gutenberg_intercept_meta_box_render' );
+		remove_action( 'block_editor_meta_box_hidden_fields', 'gutenberg_intercept_meta_box_render' );
 		remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
 		remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
 
