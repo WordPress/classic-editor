@@ -13,7 +13,8 @@ Enables the previous "classic" editor and the old-style Edit Post screen with Ti
 == Description ==
 
 Classic Editor is an official plugin maintained by the WordPress team that restores the previous ("classic") WordPress editor and the "Edit Post" screen. It makes it possible to use plugins that extend that screen, add old-style meta boxes, or otherwise depend on the previous editor.
-By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
+
+Classic Editor is an official WordPress plugin, and will be fully supported and maintained until at least 2022, or as long as is necessary.
 
 At a glance, this plugin adds the following:
 
@@ -24,7 +25,7 @@ At a glance, this plugin adds the following:
 
 In addition, the Classic Editor plugin includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
 
-Classic Editor is an official WordPress plugin, and will be maintained until at least 2022.
+By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
 
 == Changelog ==
 
