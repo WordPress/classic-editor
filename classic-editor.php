@@ -155,7 +155,7 @@ class Classic_Editor {
 		remove_action( 'submitpost_box', 'gutenberg_intercept_meta_box_render' );
 		remove_action( 'submitpage_box', 'gutenberg_intercept_meta_box_render' );
 		remove_action( 'edit_page_form', 'gutenberg_intercept_meta_box_render' );
-		remove_action( 'block_editor_meta_box_hidden_fields', 'gutenberg_intercept_meta_box_render' );
+		remove_action( 'edit_form_advanced', 'gutenberg_intercept_meta_box_render' );
 		remove_filter( 'redirect_post_location', 'gutenberg_meta_box_save_redirect' );
 		remove_filter( 'filter_gutenberg_meta_boxes', 'gutenberg_filter_meta_boxes' );
 
@@ -445,7 +445,7 @@ class Classic_Editor {
 		?>
 		<h2><?php _e( 'Editor Settings', 'classic-editor' ); ?></h2>
 		<table class="form-table">
-			<?php wp_nonce_field( 'editor-settings', 'classic-editor-network-settings' ); ?>
+			<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
 			<tr>
 				<th scope="row"><?php _e( 'Default editor for all sites', 'classic-editor' ); ?></th>
 				<td>
@@ -457,7 +457,6 @@ class Classic_Editor {
 						<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $editor === 'block' ) echo ' checked'; ?> />
 						<label for="classic-editor-block"><?php _ex( 'Block Editor', 'Editor Name', 'classic-editor' ); ?></label>
 					</p>
-					<p class="description error"><?php _e( 'Note: Setting the default network editor to Block Editor while disallowing site admins to change settings, defeats the purpose of these options.', 'classic-editor' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -476,7 +475,7 @@ class Classic_Editor {
 		if (
 			isset( $_POST['classic-editor-network-settings'] ) &&
 			current_user_can( 'manage_network_options' ) &&
-			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'editor-settings' )
+			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'allow-site-admin-settings' )
 		) {
 			if ( isset( $_POST['classic-editor-replace'] ) && $_POST['classic-editor-replace'] === 'block' ) {
 				update_network_option( null, 'classic-editor-replace', 'block' );
