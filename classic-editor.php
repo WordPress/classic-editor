@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.4-alpha
+ * Version:     1.3
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.4;
+	const plugin_version = 1.3;
 	private static $settings;
 	private static $supported_post_types = array();
 
@@ -682,7 +682,9 @@ class Classic_Editor {
 		$settings = self::get_settings();
 
 		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
-			(array) $links[] = sprintf( '<a href="%s">%s</a>', admin_url( '/network/settings.php#classic-editor-allow-sites' ), __( 'Settings', 'classic-editor' ) );
+			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
+			$links = (array) $links;
+			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( '/network/settings.php#classic-editor-allow-sites' ), __( 'Settings', 'classic-editor' ) );
 		}
 
 		return $links;
@@ -695,7 +697,9 @@ class Classic_Editor {
 		$settings = self::get_settings();
 
 		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
-			(array) $links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
+			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
+			$links = (array) $links;
+			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
 		}
 
 		return $links;
