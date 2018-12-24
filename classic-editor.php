@@ -321,7 +321,7 @@ class Classic_Editor {
 		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
 		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
 
-		// Add an option to Settings -> Writing
+		// Add options to Settings -> Writing
 		register_setting( 'writing', 'classic-editor-replace', array(
 			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
 		) );
