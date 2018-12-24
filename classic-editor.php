@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.3
+ * Version:     1.4-alpha
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -28,7 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.2;
+	const plugin_version = 1.4-alpha;
+
 	private static $settings;
 	private static $supported_post_types = array();
 
@@ -51,6 +52,10 @@ class Classic_Editor {
 		if ( ! $settings['hide-settings-ui'] ) {
 			// Show the plugin's admin settings, and a link to them in the plugins list table.
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
+
+			// Show the plugin's network admin settings, and a link to them in the plugins list table.
+			add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_network_settings_link' ), 10, 2 );
+
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
 			if ( $settings['allow-users'] ) {
@@ -218,8 +223,8 @@ class Classic_Editor {
 			}
 
 			// Override with the site options.
-			$editor_option = get_option( 'classic_editor_replace' );
-			$allow_users_option = get_option( 'classic_editor_allow_users' );
+			$editor_option = get_option( 'classic-editor-replace' );
+			$allow_users_option = get_option( 'classic-editor-allow-users' );
 
 			if ( $editor_option ) {
 				$defaults['editor'] = $editor_option;
@@ -231,8 +236,8 @@ class Classic_Editor {
 			$editor = ( isset( $defaults['editor'] ) && $defaults['editor'] === 'block' ) ? 'block' : 'classic';
 			$allow_users = ! empty( $defaults['allow-users'] );
 		} else {
-			$allow_users = ( get_option( 'classic_editor_allow_users' ) === 'allow' );
-			$option = get_option( 'classic_editor_replace' );
+			$allow_users = ( get_option( 'classic-editor-allow-users' ) === 'allow' );
+			$option = get_option( 'classic-editor-replace' );
 
 			// Normalize old options.
 			if ( $option === 'block' || $option === 'no-replace' ) {
@@ -307,30 +312,29 @@ class Classic_Editor {
 
 	public static function register_settings() {
 		add_option_whitelist( array(
-			'writing' => array( 'classic_editor_replace', 'classic_editor_allow_users' ),
+			'writing' => array( 'classic-editor-replace', 'classic-editor-allow-users' ),
 		) );
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
 		$heading_2 = __( 'Allow users to switch editors', 'classic-editor' );
 
-		add_settings_field( 'classic_editor_replace', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
-		add_settings_field( 'classic_editor_allow_users', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
-		
+		add_settings_field( 'classic-editor-1', $heading_1, array( __CLASS__, 'settings_1' ), 'writing' );
+		add_settings_field( 'classic-editor-2', $heading_2, array( __CLASS__, 'settings_2' ), 'writing' );
+
 		// Add an option to Settings -> Writing
-		register_setting( 'writing', 'classic_editor_replace', array(
+		register_setting( 'writing', 'classic-editor-replace', array(
 			'sanitize_callback' => array( __CLASS__, 'validate_option_editor' ),
 		) );
 
-		register_setting( 'writing', 'classic_editor_allow_users', array(
+		register_setting( 'writing', 'classic-editor-allow-users', array(
 			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
 		) );
-
 	}
 
 	public static function save_user_settings( $user_id ) {
 		if (
 			isset( $_POST['classic-editor-user-settings'] ) &&
-			isset( $_POST['classic_editor_replace'] ) &&
+			isset( $_POST['classic-editor-replace'] ) &&
 			wp_verify_nonce( $_POST['classic-editor-user-settings'], 'allow-user-settings' )
 		) {
 			$user_id = (int) $user_id;
@@ -339,7 +343,7 @@ class Classic_Editor {
 				return;
 			}
 
-			$editor = self::validate_option_editor( $_POST['classic_editor_replace'] );
+			$editor = self::validate_option_editor( $_POST['classic-editor-replace'] );
 			update_user_option( $user_id, 'classic-editor-settings', $editor );
 		}
 	}
@@ -365,15 +369,15 @@ class Classic_Editor {
 
 	public static function settings_1() {
 		$settings = self::get_settings( 'refresh' );
-		
+
 		?>
 		<div class="classic-editor-options">
 			<p>
-				<input type="radio" name="classic_editor_replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
+				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 			<p>
-				<input type="radio" name="classic_editor_replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
+				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-block"><?php _ex( 'Block Editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 		</div>
@@ -393,11 +397,11 @@ class Classic_Editor {
 		?>
 		<div class="classic-editor-options">
 			<p>
-				<input type="radio" name="classic_editor_allow_users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
+				<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-allow"><?php _e( 'Yes', 'classic-editor' ); ?></label>
 			</p>
 			<p>
-				<input type="radio" name="classic_editor_allow_users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
+				<input type="radio" name="classic-editor-allow-users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-disallow"><?php _e( 'No', 'classic-editor' ); ?></label>
 			</p>
 		</div>
@@ -473,7 +477,7 @@ class Classic_Editor {
 		if (
 			$pagenow !== 'about.php' ||
 			$settings['hide-settings-ui'] ||
-			$settings['editor'] === 'block' || 
+			$settings['editor'] === 'block' ||
 			$settings['allow-users'] ||
 			! current_user_can( 'edit_posts' )
 		) {
@@ -673,13 +677,30 @@ class Classic_Editor {
 	}
 
 	/**
+	 * Add a link in network admin to the settings on the Plugins screen.
+	 */
+	public static function add_network_settings_link( $links, $file ) {
+		$settings = self::get_settings();
+
+		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
+			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
+			$links = (array) $links;
+			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( '/network/settings.php#classic-editor-allow-sites' ), __( 'Settings', 'classic-editor' ) );
+		}
+
+		return $links;
+	}
+
+	/**
 	 * Add a link to the settings on the Plugins screen.
 	 */
 	public static function add_settings_link( $links, $file ) {
 		$settings = self::get_settings();
 
 		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
-			(array) $links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
+			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
+			$links = (array) $links;
+			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
 		}
 
 		return $links;
@@ -888,8 +909,8 @@ class Classic_Editor {
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
 		}
 
-		add_option( 'classic_editor_replace', 'classic' );
-		add_option( 'classic_editor_allow_users', 'disallow' );
+		add_option( 'classic-editor-replace', 'classic' );
+		add_option( 'classic-editor-allow-users', 'disallow' );
 	}
 
 	/**
@@ -900,8 +921,8 @@ class Classic_Editor {
 			delete_network_option( null, 'classic-editor-allow-sites' );
 		}
 
-		delete_option( 'classic_editor_replace' );
-		delete_option( 'classic_editor_allow_users' );
+		delete_option( 'classic-editor-replace' );
+		delete_option( 'classic-editor-allow-users' );
 	}
 }
 
