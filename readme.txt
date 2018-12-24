@@ -79,10 +79,21 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 = 0.1 =
 Initial release.
 
+== Frequently Asked Questions ==
+
+= Default settings =
+
+When activated this plugin will restore the previous ("classic") WordPress editor and hide the new Block Editor ("Gutenberg").
+
+= Default settings for network installation =
+
+When activated for the network this plugin will set the Classic Editor as default and prevent site admins and users from changing editors.
+These settings can be changed on the Network Settings screen.
+
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
 2. User settings on the Profile screen. Visible when the users are allowed to switch editors.
 3. "Action links" to choose alternative editor. Visible when the users are allowed to switch editors.
 4. Link to switch to the Block Editor while editing a post in the Classic Editor. Visible when the users are allowed to switch editors.
 5. Link to switch to the Classic Editor while editing a post in the Block Editor. Visible when the users are allowed to switch editors.
-6. Network setting to allow site admins to change the default options.
+6. Network settings to select the default editor for the network and allow site admins to change it.
