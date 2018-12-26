@@ -8,11 +8,11 @@ Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Enables the previous "classic" editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports all plugins that extend this screen.
+Restores the previous "classic" editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports all plugins that extend this screen.
 
 == Description ==
 
-Classic Editor is an official plugin maintained by the WordPress team that restores the previous ("classic") WordPress editor and the "Edit Post" screen. It makes it possible to use plugins that extend that screen, add old-style meta boxes, or otherwise depend on the previous editor.
+Classic Editor is an official plugin maintained by the WordPress Contributors Team that restores the previous ("classic") editor and the "Edit Post" screen. It makes it possible to use plugins that extend that screen, add old-style Mmeta Boxes, or otherwise depend on the previous editor.
 
 Classic Editor is an official WordPress plugin, and will be fully supported and maintained until at least 2022, or as long as is necessary.
 
@@ -42,7 +42,7 @@ By default, this plugin hides all functionality available in the new Block Edito
 * Added `classic_editor_network_default_settings` filter.
 
 = 1.1 =
-Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
+* Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
 
 = 1.0 =
 * Updated for WordPress 5.0.
@@ -77,7 +77,7 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 * Remove warning and automatic deactivation when Gutenberg is not active.
 
 = 0.1 =
-Initial release.
+* Initial release.
 
 == Frequently Asked Questions ==
 
