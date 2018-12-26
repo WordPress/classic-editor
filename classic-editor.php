@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.4-alpha;
+	const plugin_version = 1.4;
 
 	private static $settings;
 	private static $supported_post_types = array();
@@ -702,7 +702,7 @@ class Classic_Editor {
 	public static function add_network_settings_link( $links, $file ) {
 		$settings = self::get_settings();
 
-		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
+		if ( $file === 'classic-editor/classic-editor.php' && $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
 			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
 			$links = (array) $links;
 			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( '/network/settings.php#classic-editor-allow-sites' ), __( 'Settings', 'classic-editor' ) );
