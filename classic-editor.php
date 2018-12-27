@@ -28,8 +28,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
-	const plugin_version = 1.4-alpha;
-
 	private static $settings;
 	private static $supported_post_types = array();
 
@@ -685,7 +683,7 @@ class Classic_Editor {
 			'classic-editor-add-submenu',
 			plugins_url( 'js/block-editor-plugin.js', __FILE__ ),
 			array( 'wp-element', 'wp-components', 'lodash' ),
-			self::plugin_version,
+			'1.4',
 			true
 		);
 
