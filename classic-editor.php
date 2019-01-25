@@ -5,14 +5,13 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.4-alpha
+ * Version:     1.4-beta1
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
- * Network:     true
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
  * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
@@ -48,11 +47,9 @@ class Classic_Editor {
 		}
 
 		if ( ! $settings['hide-settings-ui'] ) {
-			// Show the plugin's admin settings, and a link to them in the plugins list table.
+			// Add a link to the plugin's settings and/or network admin settings in the plugins list table.
 			add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
-
-			// Show the plugin's network admin settings, and a link to them in the plugins list table.
-			add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_network_settings_link' ), 10, 2 );
+			add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 
@@ -441,7 +438,7 @@ class Classic_Editor {
 		$is_checked = ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
 
 		?>
-		<h2><?php _e( 'Editor Settings', 'classic-editor' ); ?></h2>
+		<h2 id="classic-editor-options"><?php _e( 'Editor Settings', 'classic-editor' ); ?></h2>
 		<table class="form-table">
 			<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
 			<tr>
@@ -508,7 +505,13 @@ class Classic_Editor {
 		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
 
 		if ( current_user_can( 'manage_options' ) ) {
-			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), '<a href="options-writing.php#classic-editor-options">', '</a>' );
+			if ( is_network_admin() ) {
+				$url = 'settings.php#classic-editor-options';
+			} else {
+				$url = 'options-writing.php#classic-editor-options';
+			}
+
+			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), sprintf( '<a href="%s">', $url ), '</a>' );
 		}
 
 		$margin = is_rtl() ? 'margin: 1em 0 0 160px;' : 'margin: 1em 160px 0 0;';
@@ -695,30 +698,21 @@ class Classic_Editor {
 	}
 
 	/**
-	 * Add a link in network admin to the settings on the Plugins screen.
-	 */
-	public static function add_network_settings_link( $links, $file ) {
-		$settings = self::get_settings();
-
-		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
-			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
-			$links = (array) $links;
-			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( '/network/settings.php#classic-editor-allow-sites' ), __( 'Settings', 'classic-editor' ) );
-		}
-
-		return $links;
-	}
-
-	/**
 	 * Add a link to the settings on the Plugins screen.
 	 */
 	public static function add_settings_link( $links, $file ) {
 		$settings = self::get_settings();
 
 		if ( $file === 'classic-editor/classic-editor.php' && ! $settings['hide-settings-ui'] && current_user_can( 'manage_options' ) ) {
+			if ( current_filter() === 'plugin_action_links' ) {
+				$url = admin_url( 'options-writing.php#classic-editor-options' );
+			} else {
+				$url = admin_url( '/network/settings.php#classic-editor-options' );
+			}
+
 			// Prevent warnings in PHP 7.0+ when a plugin uses this filter incorrectly.
 			$links = (array) $links;
-			$links[] = sprintf( '<a href="%s">%s</a>', admin_url( 'options-writing.php#classic-editor-options' ), __( 'Settings', 'classic-editor' ) );
+			$links[] = sprintf( '<a href="%s">%s</a>', $url, __( 'Settings', 'classic-editor' ) );
 		}
 
 		return $links;

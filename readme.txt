@@ -29,6 +29,11 @@ By default, this plugin hides all functionality available in the new Block Edito
 
 == Changelog ==
 
+= 1.4 =
+* On network installations removed the restriction for only network activation.
+* Added support for network administrators to choose the default network-wide editor.
+* Fixed the settings link in the warning on network About screen.
+
 = 1.3 =
 * Fixed removal of the "Try Gutenberg" dashboard widget.
 * Fixed condition for displaying of the after upgrade notice on the "What's New" screen. Shown when the Classic Editor is selected and users cannot switch editors.
@@ -84,11 +89,15 @@ Initial release.
 = Default settings =
 
 When activated this plugin will restore the previous ("classic") WordPress editor and hide the new Block Editor ("Gutenberg").
+These settings can be changed at the Settings => Writing screen.
 
 = Default settings for network installation =
 
-When activated for the network this plugin will set the Classic Editor as default and prevent site admins and users from changing editors.
-These settings can be changed on the Network Settings screen.
+There are two options:
+
+* When network-activated this plugin will set the Classic Editor as default and prevent site administrators and users from changing editors.
+The settings can be changed and default network-wide editor can be selected on the Network Settings screen.
+* When not network-activated each site administrator will be able to activate the plugin and choose options for their users.
 
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
