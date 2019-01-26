@@ -422,7 +422,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr class="classic-editor-user-options">
-				<th scope="row"><?php _e( 'Editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Default editor', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
 				<?php self::settings_1(); ?>
@@ -827,14 +827,14 @@ class Classic_Editor {
 
 		// Link to the Block Editor.
 		$url = remove_query_arg( 'classic-editor', $edit_url );
-		$text = _x( 'Block Editor', 'Editor Name', 'classic-editor' );
+		$text = _x( 'Edit (Block Editor)', 'Editor Name', 'classic-editor' );
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Block Editor', 'classic-editor' ), $title );
 		$edit_block = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
 
 		// Link to the Classic Editor.
 		$url = add_query_arg( 'classic-editor', '', $edit_url );
-		$text = _x( 'Classic Editor', 'Editor Name', 'classic-editor' );
+		$text = _x( 'Edit (Classic Editor)', 'Editor Name', 'classic-editor' );
 		/* translators: %s: post title */
 		$label = sprintf( __( 'Edit &#8220;%s&#8221; in the Classic Editor', 'classic-editor' ), $title );
 		$edit_classic = sprintf( '<a href="%s" aria-label="%s">%s</a>', esc_url( $url ), esc_attr( $label ), $text );
