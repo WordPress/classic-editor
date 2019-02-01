@@ -653,21 +653,15 @@ class Classic_Editor {
 	public static function do_meta_box( $post ) {
 		$edit_url = get_edit_post_link( $post->ID, 'raw' );
 
-		if ( did_action( 'enqueue_block_editor_assets' ) ) {
-			// Block Editor is loading, switch to Classic Editor.
-			$edit_url = add_query_arg( 'classic-editor', '', $edit_url );
-			$link_text = __( 'Switch to Classic Editor', 'classic-editor' );
-		} else {
-			// Switch to Block Editor.
-			$edit_url = remove_query_arg( 'classic-editor', $edit_url );
-			$link_text = __( 'Switch to Block Editor', 'classic-editor' );
-		}
-
+		// Switching to Block Editor.
+		$edit_url = remove_query_arg( 'classic-editor', $edit_url );
 		// Forget the previous value when going to a specific editor.
 		$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 
 		?>
-		<p style="margin: 1em 0;"><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo $link_text; ?></a></p>
+		<p style="margin: 1em 0;">
+			<a href="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Switch to Block Editor', 'classic-editor' ); ?></a>
+		</p>
 		<?php
 	}
 
