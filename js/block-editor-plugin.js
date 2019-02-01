@@ -1,23 +1,23 @@
-( function() {
-	const { get } = lodash;
-	const { createElement } = wp.element;
-	const { PluginMoreMenuItem } = wp.editPost;
-	const { addQueryArgs } = wp.url;
-	const { registerPlugin } = wp.plugins;
+( function( wp ) {
+	if ( ! wp ) {
+		return;
+	}
 
-	registerPlugin( 'classic-editor-add-submenu', {
+	wp.plugins.registerPlugin( 'classic-editor-add-submenu', {
 		render() {
-			const url = addQueryArgs( document.location.href, { 'classic-editor': null } );
-			const linkText = get( window, [ 'classicEditorPluginL10n', 'linkText' ] ) || 'Switch to Classic Editor';
+			var createElement = wp.element.createElement;
+			var PluginMoreMenuItem = wp.editPost.PluginMoreMenuItem;
+			var url = wp.url.addQueryArgs( document.location.href, { 'classic-editor': '', 'classic-editor__forget': '' } );
+			var linkText = lodash.get( window, [ 'classicEditorPluginL10n', 'linkText' ] ) || 'Switch to Classic Editor';
 
 			return createElement(
 				PluginMoreMenuItem,
 				{
 					icon: 'editor-kitchensink',
-					url: url,
+					href: url,
 				},
 				linkText
 			);
 		},
 	} );
-} )();
+} )( window.wp );

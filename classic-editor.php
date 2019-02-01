@@ -95,8 +95,7 @@ class Classic_Editor {
 
 			// Switch editors while editing a post
 			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
-			// TODO: needs https://github.com/WordPress/gutenberg/pull/12309
-			// add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_block_editor_scripts' ) );
+			add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_block_editor_scripts' ) );
 		} else {
 			if ( $settings['editor'] === 'classic' ) {
 				if ( $block_editor ) {
@@ -422,7 +421,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr class="classic-editor-user-options">
-				<th scope="row"><?php _e( 'Default editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php _e( 'Default Editor', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
 				<?php self::settings_1(); ?>
@@ -644,13 +643,11 @@ class Classic_Editor {
 		$id = 'classic-editor-switch-editor';
 		$title = __( 'Editor', 'classic-editor' );
 		$callback = array( __CLASS__, 'do_meta_box' );
-		/* Add when the Block Editor plugin is enabled.
 		$args = array(
 			'__back_compat_meta_box' => true,
 	    );
-	    */
 
-		add_meta_box( $id, $title, $callback, null, 'side', 'default' );
+		add_meta_box( $id, $title, $callback, null, 'side', 'default', $args );
 	}
 
 	public static function do_meta_box( $post ) {

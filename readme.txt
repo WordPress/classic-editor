@@ -33,6 +33,7 @@ By default, this plugin hides all functionality available in the new Block Edito
 * On network installations removed the restriction for only network activation.
 * Added support for network administrators to choose the default network-wide editor.
 * Fixed the settings link in the warning on network About screen.
+* Properly added the "Switch to Classic Editor" menu item to the Block Editor menu. 
 
 = 1.3 =
 * Fixed removal of the "Try Gutenberg" dashboard widget.
@@ -99,6 +100,10 @@ There are two options:
 The settings can be changed and default network-wide editor can be selected on the Network Settings screen.
 * When not network-activated each site administrator will be able to activate the plugin and choose options for their users.
 
+= Cannot find the "Switch to Classic Editor" link =
+
+It is in the main Block Editor menu, see this [screenshot](https://ps.w.org/classic-editor/assets/screenshot-7.png?rev=2023480).
+
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
 2. User settings on the Profile screen. Visible when the users are allowed to switch editors.
@@ -106,3 +111,4 @@ The settings can be changed and default network-wide editor can be selected on t
 4. Link to switch to the Block Editor while editing a post in the Classic Editor. Visible when the users are allowed to switch editors.
 5. Link to switch to the Classic Editor while editing a post in the Block Editor. Visible when the users are allowed to switch editors.
 6. Network settings to select the default editor for the network and allow site admins to change it.
+7. The "Switch to Classic Editor" link.
