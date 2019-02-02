@@ -3,7 +3,7 @@ Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pen
 Tags: gutenberg, disable, disable gutenberg, editor, classic editor, block editor
 Requires at least: 4.9
 Tested up to: 5.0
-Stable tag: 1.3
+Stable tag: 1.4
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html

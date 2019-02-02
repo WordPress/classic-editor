@@ -3,7 +3,7 @@
 		return;
 	}
 
-	wp.plugins.registerPlugin( 'classic-editor-add-submenu', {
+	wp.plugins.registerPlugin( 'classic-editor-plugin', {
 		render() {
 			var createElement = wp.element.createElement;
 			var PluginMoreMenuItem = wp.editPost.PluginMoreMenuItem;
