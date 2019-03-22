@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.4
+ * Version:     1.5-beta
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -291,12 +291,16 @@ class Classic_Editor {
 			if ( $settings['allow-users'] && ! isset( $_GET['classic-editor__forget'] ) ) {
 				$which = get_post_meta( $post_id, 'classic-editor-remember', true );
 
-				// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
-				if ( 'classic-editor' === $which ) {
-					return true;
-				} elseif ( 'block-editor' === $which ) {
-					return false;
+				if ( $which ) {
+					// The editor choice will be "remembered" when the post is opened in either Classic or Block editor.
+					if ( 'classic-editor' === $which ) {
+						return true;
+					} elseif ( 'block-editor' === $which ) {
+						return false;
+					}
 				}
+
+				return ( ! self::has_blocks( $post_id ) );
 			}
 		}
 
@@ -881,6 +885,8 @@ class Classic_Editor {
 
 			if ( $last_editor ) {
 				$is_classic = ( $last_editor === 'classic-editor' );
+			} elseif ( ! empty( $post->post_content ) ) {
+				$is_classic = ! self::has_blocks( $post->post_content );
 			} else {
 				$settings = self::get_settings();
 				$is_classic = ( $settings['editor'] === 'classic' );
@@ -922,6 +928,19 @@ class Classic_Editor {
 			remove_action( 'admin_notices', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 			add_action( 'edit_form_after_title', array( 'WP_Privacy_Policy_Content', 'notice' ) );
 		}
+	}
+
+	// Need to support WP < 5.0
+	private static function has_blocks( $post = null ) {
+		if ( ! is_string( $post ) ) {
+			$wp_post = get_post( $post );
+
+			if ( $wp_post instanceof WP_Post ) {
+				$post = $wp_post->post_content;
+			}
+		}
+
+		return false !== strpos( (string) $post, '<!-- wp:' );
 	}
 
 	/**

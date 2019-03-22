@@ -2,7 +2,7 @@
 Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
 Tags: gutenberg, disable, disable gutenberg, editor, classic editor, block editor
 Requires at least: 4.9
-Tested up to: 5.0
+Tested up to: 5.2
 Stable tag: 1.4
 Requires PHP: 5.2.4
 License: GPLv2 or later
@@ -28,6 +28,10 @@ In addition, the Classic Editor plugin includes several filters that let other p
 By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
 
 == Changelog ==
+
+= 1.5 =
+* Updated for WordPress 5.2 and Gutenberg 5.3.
+* Enhanced the "open posts in the last editor used to edit them" logic.
 
 = 1.4 =
 * On network installations removed the restriction for only network activation.
