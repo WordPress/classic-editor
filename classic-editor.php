@@ -870,6 +870,10 @@ class Classic_Editor {
 	 * Show the editor that will be used in a "post state" in the Posts list table.
 	 */
 	public static function add_post_state( $post_states, $post ) {
+		if ( get_post_status( $post ) === 'trash' ) {
+			return $post_states;
+		}
+
 		$editors = self::get_enabled_editors_for_post( $post );
 
 		if ( ! $editors['classic_editor'] && ! $editors['block_editor'] ) {
@@ -895,7 +899,9 @@ class Classic_Editor {
 			$state = $is_classic ? _x( 'Classic Editor', 'Editor Name', 'classic-editor' ) : _x( 'Block Editor', 'Editor Name', 'classic-editor' );
 		}
 
-		(array) $post_states[] = $state;
+		// Fix PHP 7+ warnings if another plugin returns unexpected type.
+		$post_states = (array) $post_states;
+		$post_states['classic-editor-plugin'] = $state;
 
 		return $post_states;
 	}
