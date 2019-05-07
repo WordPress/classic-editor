@@ -31,7 +31,8 @@ By default, this plugin hides all functionality available in the new Block Edito
 
 = 1.5 =
 * Updated for WordPress 5.2 and Gutenberg 5.3.
-* Enhanced the "open posts in the last editor used to edit them" logic.
+* Enhanced and fixed the "open posts in the last editor used to edit them" logic.
+* Fixed adding post state so it can easily be accessed from other plugins.
 
 = 1.4 =
 * On network installations removed the restriction for only network activation.
