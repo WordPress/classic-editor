@@ -115,8 +115,6 @@ class Classic_Editor {
 		}
 
 		if ( $block_editor ) {
-			// Show warning on the "What's New" screen (about.php).
-			add_action( 'all_admin_notices', array( __CLASS__, 'notice_after_upgrade' ) );
 			// Move the Privacy Page notice back under the title.
 			add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
 		}
@@ -506,44 +504,6 @@ class Classic_Editor {
 				update_network_option( null, 'classic-editor-allow-sites', 'disallow' );
 			}
 		}
-	}
-
-	public static function notice_after_upgrade() {
-		global $pagenow;
-		$settings = self::get_settings();
-
-		if (
-			$pagenow !== 'about.php' ||
-			$settings['hide-settings-ui'] ||
-			$settings['editor'] === 'block' ||
-			$settings['allow-users'] ||
-			! current_user_can( 'edit_posts' )
-		) {
-			// No need to show when the user cannot edit posts,
-			// the settings are preset from another plugin,
-			// or when not replacing the Block Editor.
-			return;
-		}
-
-		$message = __( 'The Classic Editor plugin prevents use of the new Block Editor.', 'classic-editor' );
-
-		if ( current_user_can( 'manage_options' ) ) {
-			if ( is_network_admin() ) {
-				$url = 'settings.php#classic-editor-options';
-			} else {
-				$url = 'options-writing.php#classic-editor-options';
-			}
-
-			$message .= ' ' . sprintf( __( 'Change the %1$sClassic Editor settings%2$s.', 'classic-editor' ), sprintf( '<a href="%s">', $url ), '</a>' );
-		}
-
-		$margin = is_rtl() ? 'margin: 1em 0 0 160px;' : 'margin: 1em 160px 0 0;';
-
-		?>
-		<div id="message" class="notice-warning notice" style="display: inline-block !important; <?php echo $margin; ?>">
-			<p><?php echo $message; ?></p>
-		</div>
-		<?php
 	}
 
 	/**
