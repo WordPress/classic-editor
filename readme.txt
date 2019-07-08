@@ -25,7 +25,7 @@ At a glance, this plugin adds the following:
 
 In addition, the Classic Editor plugin includes several filters that let other plugins control the settings, and the editor choice per post and per post type.
 
-By default, this plugin hides all functionality available in the new Block Editor ("Gutenberg").
+By default, this plugin hides all functionality available in the new block editor ("Gutenberg").
 
 == Changelog ==
 
@@ -38,11 +38,11 @@ By default, this plugin hides all functionality available in the new Block Edito
 * On network installations removed the restriction for only network activation.
 * Added support for network administrators to choose the default network-wide editor.
 * Fixed the settings link in the warning on network About screen.
-* Properly added the "Switch to Classic Editor" menu item to the Block Editor menu. 
+* Properly added the "Switch to classic editor" menu item to the block editor menu. 
 
 = 1.3 =
 * Fixed removal of the "Try Gutenberg" dashboard widget.
-* Fixed condition for displaying of the after upgrade notice on the "What's New" screen. Shown when the Classic Editor is selected and users cannot switch editors.
+* Fixed condition for displaying of the after upgrade notice on the "What's New" screen. Shown when the classic editor is selected and users cannot switch editors.
 
 = 1.2 =
 * Fixed switching editors from the Add New (post) screen before a draft post is saved.
@@ -53,11 +53,11 @@ By default, this plugin hides all functionality available in the new Block Edito
 * Added `classic_editor_network_default_settings` filter.
 
 = 1.1 =
-Fixed a bug where it may attempt to load the Block Editor for post types that do not support editor when users are allowed to switch editors.
+Fixed a bug where it may attempt to load the block editor for post types that do not support editor when users are allowed to switch editors.
 
 = 1.0 =
 * Updated for WordPress 5.0.
-* Changed all "Gutenberg" names/references to "Block Editor".
+* Changed all "Gutenberg" names/references to "block editor".
 * Refreshed the settings UI.
 * Removed disabling of the Gutenberg plugin. This was added for testing in WordPress 4.9. Users who want to continue following the development of Gutenberg in WordPress 5.0 and beyond will not need another plugin to disable it.
 * Added support for per-user settings of default editor.
@@ -72,7 +72,7 @@ Fixed a bug where it may attempt to load the Block Editor for post types that do
 = 0.5 =
 * Updated for Gutenberg 4.1 and WordPress 5.0-beta1.
 * Removed some functionality that now exists in Gutenberg.
-* Fixed redirecting back to the Classic Editor after looking at post revisions.
+* Fixed redirecting back to the classic editor after looking at post revisions.
 
 = 0.4 =
 * Fixed removing of the "Try Gutenberg" call-out when the Gutenberg plugin is not activated.
@@ -94,26 +94,26 @@ Initial release.
 
 = Default settings =
 
-When activated this plugin will restore the previous ("classic") WordPress editor and hide the new Block Editor ("Gutenberg").
+When activated this plugin will restore the previous ("classic") WordPress editor and hide the new block editor ("Gutenberg").
 These settings can be changed at the Settings => Writing screen.
 
 = Default settings for network installation =
 
 There are two options:
 
-* When network-activated this plugin will set the Classic Editor as default and prevent site administrators and users from changing editors.
+* When network-activated this plugin will set the classic editor as default and prevent site administrators and users from changing editors.
 The settings can be changed and default network-wide editor can be selected on the Network Settings screen.
 * When not network-activated each site administrator will be able to activate the plugin and choose options for their users.
 
-= Cannot find the "Switch to Classic Editor" link =
+= Cannot find the "Switch to classic editor" link =
 
-It is in the main Block Editor menu, see this [screenshot](https://ps.w.org/classic-editor/assets/screenshot-7.png?rev=2023480).
+It is in the main block editor menu, see this [screenshot](https://ps.w.org/classic-editor/assets/screenshot-7.png?rev=2023480).
 
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
 2. User settings on the Profile screen. Visible when the users are allowed to switch editors.
 3. "Action links" to choose alternative editor. Visible when the users are allowed to switch editors.
-4. Link to switch to the Block Editor while editing a post in the Classic Editor. Visible when the users are allowed to switch editors.
-5. Link to switch to the Classic Editor while editing a post in the Block Editor. Visible when the users are allowed to switch editors.
+4. Link to switch to the block editor while editing a post in the classic editor. Visible when the users are allowed to switch editors.
+5. Link to switch to the classic editor while editing a post in the block editor. Visible when the users are allowed to switch editors.
 6. Network settings to select the default editor for the network and allow site admins to change it.
-7. The "Switch to Classic Editor" link.
+7. The "Switch to classic editor" link.
