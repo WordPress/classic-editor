@@ -856,7 +856,7 @@ class Classic_Editor {
 				$is_classic = ( $settings['editor'] === 'classic' );
 			}
 
-			$state = $is_classic ? _x( 'classic editor', 'Editor Name', 'classic-editor' ) : _x( 'block editor', 'Editor Name', 'classic-editor' );
+			$state = $is_classic ? _x( 'Classic editor', 'Editor Name', 'classic-editor' ) : _x( 'Block editor', 'Editor Name', 'classic-editor' );
 		}
 
 		// Fix PHP 7+ warnings if another plugin returns unexpected type.
