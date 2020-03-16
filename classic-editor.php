@@ -37,7 +37,6 @@ class Classic_Editor {
 		$gutenberg = function_exists( 'gutenberg_register_scripts_and_styles' );
 
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
-		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
 
 		$settings = self::get_settings();
 
@@ -913,6 +912,8 @@ class Classic_Editor {
 	 * Set defaults on activation.
 	 */
 	public static function activate() {
+		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
+		
 		if ( is_multisite() ) {
 			add_network_option( null, 'classic-editor-replace', 'classic' );
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
