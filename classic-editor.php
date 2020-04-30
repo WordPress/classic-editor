@@ -65,8 +65,16 @@ class Classic_Editor {
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
 		}
+		
+		/**
+		 * Can be used to force gutenber to be disabled, can be useful to just limit usage to certain user roles or other conditions.
+		 *
+		 *
+		 * @param boolean To force a disabled gutenberg editor, return true.
+		 */
+		$force_disable = apply_filters( 'classic_editor_force_disable', false );
 
-		if ( $settings['allow-users'] ) {
+		if ( $settings['allow-users'] && ! $force_disable ) {
 			// Also used in Gutenberg.
 			add_filter( 'use_block_editor_for_post', array( __CLASS__, 'choose_editor' ), 100, 2 );
 
