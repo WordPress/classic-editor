@@ -25,6 +25,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Invalid request.' );
 }
 
+define( 'CLASSIC_EDITOR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
 	private static $settings;
@@ -125,6 +127,14 @@ class Classic_Editor {
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
 		}
+
+		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
+	}
+
+	public static function register_routes() {
+		require_once CLASSIC_EDITOR_PLUGIN_DIR . 'class-classic-editor-endpoint.php';
+		$controller = new Classic_Editor_Endpoint();
+		$controller->register_routes();
 	}
 
 	public static function remove_gutenberg_hooks( $remove = 'all' ) {
@@ -189,7 +199,7 @@ class Classic_Editor {
 
 	}
 
-	private static function get_settings( $refresh = 'no' ) {
+	public static function get_settings( $refresh = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings. Always hides the settings UI when used (as users cannot change the settings).
 		 *
