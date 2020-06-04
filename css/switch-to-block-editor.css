@@ -1,0 +1,33 @@
+#classic-editor-switch-editor .inside {
+    text-align: center;
+    padding: 32px 12px;
+    width: 63%;
+    margin: 0 auto;
+}
+
+#classic-editor-switch-editor .add-block-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #23282d;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+}
+
+#classic-editor-switch-editor h4 {
+    font-size: 1rem;
+    margin: 24px 0;
+}
+
+#classic-editor-switch-editor p {
+    text-align: left;
+    margin-bottom: 24px;
+}
+
+#classic-editor-switch-editor .learn-more {
+    display: block;
+    margin-bottom: 24px;
+}
