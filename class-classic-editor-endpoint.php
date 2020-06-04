@@ -20,15 +20,7 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 	* @return true|WP_Error
 	*/
 	public function get_user_settings_permissions_check( $request ) {
-		if ( ! current_user_can( 'edit_user', get_current_user_id() ) ) {
-			return new WP_Error(
-				'rest_classic_editor_settings_cannot_view',
-				__( 'Sorry, you are not allowed to view these settings.' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
-		}
-
-		return true;
+		return get_current_user_id() > 0;
 	}
 
 	/**
