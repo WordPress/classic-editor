@@ -63,6 +63,11 @@ class Classic_Editor {
 
 		// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
 		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
+
+		register_meta( 'post', 'classic-editor-remember', array(
+			'show_in_rest' => true,
+			'single'       => true,
+		) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 
 		if ( ! $block_editor && ! $gutenberg  ) {
