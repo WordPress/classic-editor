@@ -199,7 +199,7 @@ class Classic_Editor {
 
 	}
 
-	public static function get_settings( $refresh = 'no' ) {
+	private static function get_settings( $refresh = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings. Always hides the settings UI when used (as users cannot change the settings).
 		 *
