@@ -1,9 +1,6 @@
 <?php
 
 class Classic_Editor_Endpoint extends WP_REST_Controller {
-	/**
-	* Register the routes for the objects of the controller.
-	*/
 	public function register_routes() {
 		$version = '1';
 		$namespace = 'classic-editor/v' . $version;
@@ -24,7 +21,7 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
   	}
  
 	/**
-	* Get classic editor plugin settings for site
+	* Get classic editor plugin settings for a given user id
 	* 
 	* @param WP_REST_Request $request Full data about the request.
 	* @return WP_Error|WP_REST_Response
