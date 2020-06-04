@@ -21,6 +21,45 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
   	}
  
 	/**
+	* Check if a given request has access to the user's Classic Editor plugin settings.
+	* 
+	* @param WP_REST_Request $request Full data about the request.
+	* @return true|WP_Error
+	*/
+	public function get_user_settings_permissions_check( $request ) {
+		$error_invalid_id = new WP_Error(
+			'rest_user_invalid_id',
+			__( 'Invalid user ID.' ),
+			array( 'status' => 404 )
+		);
+		$error_not_allowed = new WP_Error(
+			'rest_user_cannot_view',
+			__( 'Sorry, you are not allowed to view these settings.' ),
+			array( 'status' => rest_authorization_required_code() )
+		);
+
+		$user_id = $request['user_id'];
+		$user = get_userdata( (int) $user_id );
+		if ( empty( $user ) || ! $user->exists() ) {
+			return $error_invalid_id;
+		}
+
+		if ( is_multisite() && ! is_user_member_of_blog( $user->ID ) ) {
+			return $error_invalid_id;
+		}
+
+		if ( get_current_user_id() === $user->ID ) {
+			return true;
+		}
+
+		if ( current_user_can( 'list_users' ) ) {
+			return true;
+		}
+
+		return $error_not_allowed;
+	}
+
+	/**
 	* Get Classic Editor plugin settings for a given user id
 	* 
 	* @param WP_REST_Request $request Full data about the request.
@@ -36,39 +75,5 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 		);
 
 		return new WP_REST_Response( $response, 200 );
-	}
-
-	/**
-	* Check if a given request has access to the user's Classic Editor plugin settings.
-	* 
-	* @param WP_REST_Request $request Full data about the request.
-	* @return true|WP_Error
-	*/
-	public function get_user_settings_permissions_check( $request ) {
-		$error = new WP_Error(
-			'rest_user_invalid_id',
-			__( 'Invalid user ID.' ),
-			array( 'status' => 404 )
-		);
-
-		$user_id = $request['user_id'];
-		$user = get_userdata( (int) $id );
-		if ( empty( $user ) || ! $user->exists() ) {
-			return $error;
-		}
-
-		if ( is_multisite() && ! is_user_member_of_blog( $user->ID ) ) {
-			return $error;
-		}
-
-		if ( get_current_user_id() === $user->ID ) {
-			return true;
-		}
-
-		if ( current_user_can( 'list_users' ) ) {
-			return true;
-		}
-
-		return $error;
 	}
 }
