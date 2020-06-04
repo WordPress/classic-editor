@@ -96,6 +96,7 @@ class Classic_Editor {
 			// Switch editors while editing a post
 			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ), 10, 2 );
 			add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_block_editor_scripts' ) );
+			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_switch_editor_styles' ) );
 		} else {
 			if ( $settings['editor'] === 'classic' ) {
 				// Also used in Gutenberg.
@@ -624,7 +625,7 @@ class Classic_Editor {
 		}
 
 		$id = 'classic-editor-switch-editor';
-		$title = __( 'Editor', 'classic-editor' );
+		$title = __( 'Use the Block Editor', 'classic-editor' );
 		$callback = array( __CLASS__, 'do_meta_box' );
 		$args = array(
 			'__back_compat_meta_box' => true,
@@ -642,9 +643,21 @@ class Classic_Editor {
 		$edit_url = add_query_arg( 'classic-editor__forget', '', $edit_url );
 
 		?>
-		<p style="margin: 1em 0;">
-			<a href="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Switch to block editor', 'classic-editor' ); ?></a>
-		</p>
+			<a href="<?php echo esc_url( $edit_url ); ?>" class="add-block-link">
+				<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+			</a>
+			<h4>
+				<?php _e( 'The Block Editor <br /> is ready when you are.', 'classic-editor' ); ?>
+			</h4>
+			<p>
+				<?php _e( 'The Block Editor lets you insert, rearrange, and style multimedia content to build your own custom pages and posts without writing code.', 'classic-editor' ); ?>
+			</p>
+			<a href="https://wordpress.org/gutenberg/" target="_blank" class="learn-more">
+				<?php _e( 'Learn more', 'classic-editor' ) ?>
+			</a>
+			<a href="<?php echo esc_url( $edit_url ); ?>" class="button button-primary button-large">
+				<?php _e( 'Use the Block Editor', 'classic-editor' ) ?>
+			</a>
 		<?php
 	}
 
@@ -668,6 +681,20 @@ class Classic_Editor {
 			'classic-editor-plugin',
 			'classicEditorPluginL10n',
 			array( 'linkText' => __( 'Switch to classic editor', 'classic-editor' ) )
+		);
+	}
+
+	public static function enqueue_switch_editor_styles() {
+		$editors = self::get_enabled_editors_for_post( $GLOBALS['post'] );
+
+		if ( ! $editors['block_editor'] ) {
+			// Editor cannot be switched.
+			return;
+		}
+
+		wp_enqueue_style(
+			'switch_to_block_editor_css',
+			plugin_dir_url( __FILE__ ) . 'css/switch-to-block-editor.css'
 		);
 	}
 
