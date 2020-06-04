@@ -5,16 +5,15 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 		$version = '1';
 		$namespace = 'classic-editor/v' . $version;
 
-		register_rest_route( $namespace, '/settings/(?P<id>[\d]+)', array(
+		register_rest_route( $namespace, '/settings/(?P<user_id>[\d]+)', array(
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_user_settings' ),
-				'permission_callback' => array( $this, 'get_settings_permissions_check' ),
 				'args'                => array(
-				'id'     => array(
+				'user_id'     => array(
 					'description'       => 'ID of user to get settings for.',
 					'type'              => 'integer',
-					'default'           => 1,
+					'default'           => 0,
 					'sanitize_callback' => 'absint',
             	)),
 			) ) );
@@ -27,19 +26,13 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 	* @return WP_Error|WP_REST_Response
 	*/
 	public function get_user_settings( $request ) {
-		$user_id = [ 'user_id' => $request['id']];
-		$settings = Classic_Editor::get_user_settings( $user_id );
+		$user_id = $request['user_id'];
+		$settings = Classic_Editor::get_settings( 'yes', $user_id );
 
-		return new WP_REST_Response( $settings, 200 );
+		$response = array(
+			'selected_editor' => $settings['editor'],
+		);
+
+		return new WP_REST_Response( $response, 200 );
 	}
-
-	/**
-	* Check if a given request has access to get user settings
-	*
-	* @param WP_REST_Request $request Full data about the request.
-	* @return WP_Error|bool
-	*/
-	public function get_settings_permissions_check( $request ) {
-		return true; 
-  	}
 }
