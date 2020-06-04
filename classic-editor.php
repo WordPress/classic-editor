@@ -203,7 +203,7 @@ class Classic_Editor {
 
 	}
 
-	public static function get_settings( $refresh = 'no', $user_id = 0 ) {
+	public static function get_settings( $refresh = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings. Always hides the settings UI when used (as users cannot change the settings).
 		 *
@@ -275,7 +275,7 @@ class Classic_Editor {
 
 		// Override the defaults with the user options.
 		if ( ( ! isset( $GLOBALS['pagenow'] ) || $GLOBALS['pagenow'] !== 'options-writing.php' ) && $allow_users ) {
-			$user_options = get_user_option( 'classic-editor-settings', $user_id );
+			$user_options = get_user_option( 'classic-editor-settings' );
 
 			if ( $user_options === 'block' || $user_options === 'classic' ) {
 				$editor = $user_options;

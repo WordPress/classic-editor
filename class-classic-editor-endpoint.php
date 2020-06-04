@@ -5,18 +5,11 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 		$version = '1';
 		$namespace = 'classic-editor/v' . $version;
 
-		register_rest_route( $namespace, '/settings/(?P<user_id>[\d]+)', array(
+		register_rest_route( $namespace, '/settings', array(
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_user_settings' ),
 				'permission_callback' => array( $this, 'get_user_settings_permissions_check' ),
-				'args'                => array(
-				'user_id'     => array(
-					'description'       => 'ID of user to get settings for.',
-					'type'              => 'integer',
-					'default'           => 0,
-					'sanitize_callback' => 'absint',
-            	)),
 			) ) );
   	}
  
@@ -27,36 +20,15 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 	* @return true|WP_Error
 	*/
 	public function get_user_settings_permissions_check( $request ) {
-		$error_invalid_id = new WP_Error(
-			'rest_user_invalid_id',
-			__( 'Invalid user ID.' ),
-			array( 'status' => 404 )
-		);
-		$error_not_allowed = new WP_Error(
-			'rest_user_cannot_view',
-			__( 'Sorry, you are not allowed to view these settings.' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-
-		$user_id = $request['user_id'];
-		$user = get_userdata( (int) $user_id );
-		if ( empty( $user ) || ! $user->exists() ) {
-			return $error_invalid_id;
+		if ( ! current_user_can( 'edit_user', get_current_user_id() ) ) {
+			return new WP_Error(
+				'rest_classic_editor_settings_cannot_view',
+				__( 'Sorry, you are not allowed to view these settings.' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
 		}
 
-		if ( is_multisite() && ! is_user_member_of_blog( $user->ID ) ) {
-			return $error_invalid_id;
-		}
-
-		if ( get_current_user_id() === $user->ID ) {
-			return true;
-		}
-
-		if ( current_user_can( 'list_users' ) ) {
-			return true;
-		}
-
-		return $error_not_allowed;
+		return true;
 	}
 
 	/**
@@ -66,8 +38,7 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 	* @return WP_Error|WP_REST_Response
 	*/
 	public function get_user_settings( $request ) {
-		$user_id = $request['user_id'];
-		$settings = Classic_Editor::get_settings( 'yes', $user_id );
+		$settings = Classic_Editor::get_settings();
 
 		$response = array(
 			'can_switch_editors' => $settings['allow-users'],
