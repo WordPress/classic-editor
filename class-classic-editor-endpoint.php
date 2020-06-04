@@ -30,7 +30,8 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 		$settings = Classic_Editor::get_settings( 'yes', $user_id );
 
 		$response = array(
-			'selected_editor' => $settings['editor'],
+			'can_switch_editors' => $settings['allow-users'],
+			'selected_editor'    => $settings['editor'],
 		);
 
 		return new WP_REST_Response( $response, 200 );
