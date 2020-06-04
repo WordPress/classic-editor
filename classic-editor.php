@@ -63,6 +63,7 @@ class Classic_Editor {
 
 		// Always remove the "Try Gutenberg" dashboard widget. See https://core.trac.wordpress.org/ticket/44635.
 		remove_action( 'try_gutenberg_panel', 'wp_try_gutenberg_panel' );
+		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
@@ -127,8 +128,6 @@ class Classic_Editor {
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
 		}
-
-		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 	}
 
 	public static function register_routes() {
@@ -923,7 +922,7 @@ class Classic_Editor {
 	 */
 	public static function activate() {
 		register_uninstall_hook( __FILE__, array( __CLASS__, 'uninstall' ) );
-		
+
 		if ( is_multisite() ) {
 			add_network_option( null, 'classic-editor-replace', 'classic' );
 			add_network_option( null, 'classic-editor-allow-sites', 'disallow' );
