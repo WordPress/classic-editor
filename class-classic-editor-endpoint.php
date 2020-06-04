@@ -8,10 +8,10 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 		$version = '1';
 		$namespace = 'classic-editor/v' . $version;
 
-		register_rest_route( $namespace, '/settings', array(
+		register_rest_route( $namespace, '/settings/(?P<id>[\d]+)', array(
 			array(
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_settings' ),
+				'callback'            => array( $this, 'get_user_settings' ),
 				'permission_callback' => array( $this, 'get_settings_permissions_check' ),
 				'args'                => array(
 				'id'     => array(
@@ -21,19 +21,6 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 					'sanitize_callback' => 'absint',
             	)),
 			) ) );
-		register_rest_route( $namespace, '/settings/(?P<id>[\d]+)', array(
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_user_settings' ),
-				'permission_callback' => array( $this, 'get_settings_permissions_check' ),
-				'args'                => array(
-					'id'     => array(
-						'description'       => 'ID of user to get settings for.',
-						'type'              => 'integer',
-						'default'           => 1,
-						'sanitize_callback' => 'absint',
-					)),
-				) ) );
   	}
  
 	/**
@@ -42,23 +29,13 @@ class Classic_Editor_Endpoint extends WP_REST_Controller {
 	* @param WP_REST_Request $request Full data about the request.
 	* @return WP_Error|WP_REST_Response
 	*/
-	public function get_settings( $request ) {
-		$data = Classic_Editor::get_settings();
-
-		return new WP_REST_Response( $data, 200 );
-	}
- 
-	/**
-	* Get classic editor plugin settings for specified user
-	* 
-	* @param WP_REST_Request $request Full data about the request.
-	* @return WP_Error|WP_REST_Response
-	*/
 	public function get_user_settings( $request ) {
-		$data = [ 'user_id' => $request['id']];
+		$user_id = [ 'user_id' => $request['id']];
+		$settings = Classic_Editor::get_user_settings( $user_id );
 
-		return new WP_REST_Response( $data, 200 );
+		return new WP_REST_Response( $settings, 200 );
 	}
+
 	/**
 	* Check if a given request has access to get user settings
 	*

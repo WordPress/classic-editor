@@ -945,6 +945,21 @@ class Classic_Editor {
 		delete_option( 'classic-editor-replace' );
 		delete_option( 'classic-editor-allow-users' );
 	}
+
+	/**
+	 * Get a summary of settings for a given user id.
+	 */
+	public static function get_user_settings( $user_id ) {
+		$classic_editor_replace     = get_option( 'classic-editor-replace' );
+		$classic_editor_allow_users = get_option( 'classic-editor-allow-users' );
+		$classic_editor_settings    = get_user_option( 'classic-editor-settings', $user_id );
+
+		return [
+			'classic_editor_replace'     => $classic_editor_replace,
+			'classic_editor_allow_users' => $classic_editor_allow_users,
+			'classic_editor_settings'    => $classic_editor_settings,
+		];
+	}
 }
 
 add_action( 'plugins_loaded', array( 'Classic_Editor', 'init_actions' ) );
