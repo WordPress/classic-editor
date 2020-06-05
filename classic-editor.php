@@ -291,7 +291,7 @@ class Classic_Editor {
 		return self::$settings;
 	}
 
-	private static function is_classic( $post_id = 0 ) {
+	public static function is_classic( $post_id = 0 ) {
 		if ( ! $post_id ) {
 			$post_id = self::get_edited_post_id();
 		}
