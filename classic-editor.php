@@ -335,20 +335,17 @@ class Classic_Editor {
 			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
 		) );
 
-		if ( function_exists( 'add_option_allowed_list' ) ) {
-			add_option_allowed_list( array(
-				'writing' => array(
-					'classic-editor-replace',
-					'classic-editor-allow-users'
-				),
-			) );
+		$allowed_options = array(
+			'writing' => array(
+				'classic-editor-replace',
+				'classic-editor-allow-users'
+			),
+		);
+
+		if ( function_exists( 'add_allowed_options' ) ) {
+			add_allowed_options( $allowed_options );
 		} else {
-			add_option_whitelist( array(
-				'writing' => array(
-					'classic-editor-replace',
-					'classic-editor-allow-users'
-				),
-			) );
+			add_option_whitelist( $allowed_options );
 		}
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
