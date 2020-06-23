@@ -335,9 +335,21 @@ class Classic_Editor {
 			'sanitize_callback' => array( __CLASS__, 'validate_option_allow_users' ),
 		) );
 
-		add_option_whitelist( array(
-			'writing' => array( 'classic-editor-replace', 'classic-editor-allow-users' ),
-		) );
+		if ( function_exists( 'add_option_allowed_list' ) ) {
+			add_option_allowed_list( array(
+				'writing' => array(
+					'classic-editor-replace',
+					'classic-editor-allow-users'
+				),
+			) );
+		} else {
+			add_option_whitelist( array(
+				'writing' => array(
+					'classic-editor-replace',
+					'classic-editor-allow-users'
+				),
+			) );
+		}
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
 		$heading_2 = __( 'Allow users to switch editors', 'classic-editor' );
