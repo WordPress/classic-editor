@@ -31,7 +31,7 @@ By default, this plugin hides all functionality available in the new block edito
 
 = 1.6 =
 * Updated for WordPress 5.5.
-* Fixed minor issues with calling deprecated functions and needlessly registering uninstall hook.
+* Fixed minor issues with calling deprecated functions, needlessly registering uninstall hook, and capitalization of some strings.
 
 = 1.5 =
 * Updated for WordPress 5.2 and Gutenberg 5.3.
