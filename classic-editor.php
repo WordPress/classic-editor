@@ -119,6 +119,7 @@ class Classic_Editor {
 			// Move the Privacy Page notice back under the title.
 			add_action( 'admin_init', array( __CLASS__, 'on_admin_init' ) );
 		}
+
 		if ( $gutenberg ) {
 			// These are handled by this plugin. All are older, not used in 5.3+.
 			remove_action( 'admin_init', 'gutenberg_add_edit_link_filters' );
@@ -126,6 +127,11 @@ class Classic_Editor {
 			remove_filter( 'redirect_post_location', 'gutenberg_redirect_to_classic_editor_when_saving_posts' );
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
+		}
+
+		// Support disabling widgets block editor. (Currently in the Gutenberg plugin.)
+		if ( $settings['editor'] === 'classic' ) {
+			add_filter( 'gutenberg_use_widgets_block_editor', '__return_false', 100 );
 		}
 	}
 
