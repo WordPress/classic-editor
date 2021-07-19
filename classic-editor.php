@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.6
+ * Version:     1.6.1
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -13,6 +13,7 @@
  * Text Domain: classic-editor
  * Domain Path: /languages
  * Requires at least: 4.9
+ * Tested up to: 5.8
  * Requires PHP: 5.2.4
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
@@ -87,7 +88,7 @@ class Classic_Editor {
 			add_action( 'admin_head-edit.php', array( __CLASS__, 'add_edit_php_inline_style' ) );
 
 			add_action( 'edit_form_top', array( __CLASS__, 'remember_classic_editor' ) );
-			add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+			add_filter( 'block_editor_settings_all', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
 
 			// Post state (edit.php)
 			add_filter( 'display_post_states', array( __CLASS__, 'add_post_state' ), 10, 2 );
@@ -660,6 +661,11 @@ class Classic_Editor {
 	}
 
 	public static function enqueue_block_editor_scripts() {
+		// get_enabled_editors_for_post() needs a WP_Post or post_ID.
+		if ( empty( $GLOBALS['post'] ) ) {
+			return;
+		}
+
 		$editors = self::get_enabled_editors_for_post( $GLOBALS['post'] );
 
 		if ( ! $editors['classic_editor'] ) {
