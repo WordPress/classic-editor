@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.6.1
+ * Version:     1.6.2
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -88,7 +88,12 @@ class Classic_Editor {
 			add_action( 'admin_head-edit.php', array( __CLASS__, 'add_edit_php_inline_style' ) );
 
 			add_action( 'edit_form_top', array( __CLASS__, 'remember_classic_editor' ) );
-			add_filter( 'block_editor_settings_all', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+
+			if ( version_compare( $GLOBALS['wp_version'], '5.8', '>=' ) ) {
+				add_filter( 'block_editor_settings_all', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+			} else {
+				add_filter( 'block_editor_settings', array( __CLASS__, 'remember_block_editor' ), 10, 2 );
+			}
 
 			// Post state (edit.php)
 			add_filter( 'display_post_states', array( __CLASS__, 'add_post_state' ), 10, 2 );
@@ -541,7 +546,15 @@ class Classic_Editor {
 	/**
 	 * Remember when the block editor was used to edit a post.
 	 */
-	public static function remember_block_editor( $editor_settings, $post ) {
+	public static function remember_block_editor( $editor_settings, $context ) {
+		if ( is_a( $context, 'WP_Post' ) ) {
+			$post = $context;
+		} elseif ( ! empty( $context->post ) ) {
+			$post = $context->post;
+		} else {
+			return $editor_settings;
+		}
+
 		$post_type = get_post_type( $post );
 
 		if ( $post_type && self::can_edit_post_type( $post_type ) ) {
