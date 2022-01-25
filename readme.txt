@@ -108,14 +108,14 @@ Initial release.
 
 = Default settings =
 
-When activated this plugin will restore the previous ("classic") WordPress editor and hide the new block editor ("Gutenberg").
+When activated and when using a classic (non-block) theme, this plugin will restore the previous ("classic") WordPress editor and hide the new block editor ("Gutenberg").
 These settings can be changed at the Settings => Writing screen.
 
 = Default settings for network installation =
 
 There are two options:
 
-* When network-activated this plugin will set the classic editor as default and prevent site administrators and users from changing editors.
+* When network-activated and when using a classic (non-block) theme, this plugin will set the classic editor as default and prevent site administrators and users from changing editors.
 The settings can be changed and default network-wide editor can be selected on the Network Settings screen.
 * When not network-activated each site administrator will be able to activate the plugin and choose options for their users.
 
