@@ -197,6 +197,16 @@ class Classic_Editor {
 
 	}
 
+	/**
+	 * Runs on hook after_setup_theme
+	 *
+	 * @return void
+	 */
+	public static function remove_after_setup_theme_hook() {
+		remove_action( 'wp_body_open', 'wp_global_styles_render_svg_filters' );
+		remove_action( 'in_admin_header', 'wp_global_styles_render_svg_filters' );
+	}
+
 	private static function get_settings( $refresh = 'no' ) {
 		/**
 		 * Can be used to override the plugin's settings. Always hides the settings UI when used (as users cannot change the settings).
@@ -968,5 +978,7 @@ class Classic_Editor {
 }
 
 add_action( 'plugins_loaded', array( 'Classic_Editor', 'init_actions' ) );
+
+add_action('after_setup_theme', 'Classic_Editor::remove_after_setup_theme_hook', 10, 0);
 
 endif;
