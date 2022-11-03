@@ -120,6 +120,10 @@ The settings can be changed and default network-wide editor can be selected on t
 
 It is in the main block editor menu, see this [screenshot](https://ps.w.org/classic-editor/assets/screenshot-7.png?rev=2023480).
 
+= Does this work with full site editing and block themes? =
+
+No, as block themes rely on blocks. [See Block themes article](https://wordpress.org/support/article/block-themes/) for more information.
+
 == Screenshots ==
 1. Admin settings on the Settings -> Writing screen.
 2. User settings on the Profile screen. Visible when the users are allowed to switch editors.
@@ -128,7 +132,3 @@ It is in the main block editor menu, see this [screenshot](https://ps.w.org/clas
 5. Link to switch to the classic editor while editing a post in the block editor. Visible when the users are allowed to switch editors.
 6. Network settings to select the default editor for the network and allow site admins to change it.
 7. The "Switch to classic editor" link.
-
-= Does this work with full site editing and block themes? =
-
-No, as block themes rely on blocks. [See Block themes article](https://wordpress.org/support/article/block-themes/) for more information.
