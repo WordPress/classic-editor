@@ -486,11 +486,11 @@ class Classic_Editor {
 				<td>
 					<p>
 						<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $editor !== 'block' ) echo ' checked'; ?> />
-						<label for="classic-editor-classic"><?php echo _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
+						<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
 					</p>
 					<p>
 						<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $editor === 'block' ) echo ' checked'; ?> />
-						<label for="classic-editor-block"><?php echo _ex( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
+						<label for="classic-editor-block"><?php _ex( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
 					</p>
 				</td>
 			</tr>
