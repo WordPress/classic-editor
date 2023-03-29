@@ -29,6 +29,10 @@ By default, this plugin hides all functionality available in the new block edito
 
 == Changelog ==
 
+= 1.6.3 =
+* Added some WPCS fixes, props NicktheGeek on GitHub.
+* Updated "Tested up to" in the readme and removed it from classic-editor.php. This should fix future false positive errors in security plugins.
+
 = 1.6.2 =
 * Fixed bug that was preventing saving of the last used editor.
 
