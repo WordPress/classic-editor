@@ -5,7 +5,7 @@
  * Plugin Name: Classic Editor
  * Plugin URI:  https://wordpress.org/plugins/classic-editor/
  * Description: Enables the WordPress classic editor and the old-style Edit Post screen with TinyMCE, Meta Boxes, etc. Supports the older plugins that extend this screen.
- * Version:     1.6.2
+ * Version:     1.6.3
  * Author:      WordPress Contributors
  * Author URI:  https://github.com/WordPress/classic-editor/
  * License:     GPLv2 or later
@@ -13,7 +13,6 @@
  * Text Domain: classic-editor
  * Domain Path: /languages
  * Requires at least: 4.9
- * Tested up to: 6.1
  * Requires PHP: 5.2.4
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
