@@ -1,5 +1,5 @@
 === Classic Editor ===
-Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce
+Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce, ironprogrammer
 Tags: gutenberg, disable, disable gutenberg, editor, classic editor, block editor
 Requires at least: 4.9
 Tested up to: 6.5
