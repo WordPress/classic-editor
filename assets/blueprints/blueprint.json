@@ -1,0 +1,23 @@
+{
+    "landingPage": "/wp-admin/post-new.php",
+    "features": {
+        "networking": true
+    },
+    "steps": [
+        {
+            "step": "login",
+            "username": "admin",
+            "password": "password"
+        },
+        {
+            "step": "installPlugin",
+            "pluginZipFile": {
+                "resource": "wordpress.org/plugins",
+                "slug": "classic-editor"
+            },
+            "options": {
+                "activate": true
+            }
+        }
+    ]
+}
