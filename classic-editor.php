@@ -207,7 +207,7 @@ class Classic_Editor {
 		 *   'editor' => 'classic', // Accepted values: 'classic', 'block'.
 		 *   'allow-users' => false,
 		 *
-		 * @param boolean To override the settings return an array with the above keys.
+		 * @param boolean To override the settings return an array with the above keys. Default false.
 		 */
 		$settings = apply_filters( 'classic_editor_plugin_settings', false );
 
