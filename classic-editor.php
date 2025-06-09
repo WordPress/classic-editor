@@ -144,6 +144,48 @@ class Classic_Editor {
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
 		}
+		add_action( 'admin_print_footer_scripts', array( __CLASS__, 'conditionally_disable_publish_button_classic_editor' ) );
+	}
+
+	public static function conditionally_disable_publish_button_classic_editor() {
+		$screen = get_current_screen();
+		if ( ! in_array( $screen->base, [ 'post' ], true ) ) {
+			return;
+		}
+		if ( function_exists( 'use_block_editor_for_post_type' ) && use_block_editor_for_post_type( $screen->post_type ) ) {
+			return;
+		}
+		?>
+		<script type="text/javascript">
+		jQuery( document ).ready( function( $ ) {
+			var $publishBtn = $( '#publish' );
+			$publishBtn.attr( 'disabled', true );
+
+			function togglePublishButton() {
+				var title = $( '#title' ).val().trim();
+				var content = '';
+
+				if ( typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor && !tinyMCE.activeEditor.isHidden() ) {
+					content = tinyMCE.activeEditor.getContent( { format: 'text' } ).trim();
+				} else {
+					content = $( '#content' ).val().trim();
+				}
+
+				if ( title === '' && content === '' ) {
+					$publishBtn.attr( 'disabled', true );
+				} else {
+					$publishBtn.attr( 'disabled', false );
+				}
+			}
+			$( '#title, #content' ).on( 'input keyup change', togglePublishButton );
+			if ( typeof tinyMCE !== 'undefined' ) {
+				tinymce.on( 'AddEditor', function(e) {
+					e.editor.on( 'keyup change', togglePublishButton );
+				} );
+			}
+		});
+		</script>
+		<?php
 	}
 
 	public static function remove_gutenberg_hooks( $remove = 'all' ) {
