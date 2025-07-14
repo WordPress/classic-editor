@@ -53,6 +53,7 @@ class Classic_Editor {
 			add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 
 			add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+			add_filter( 'content_save_pre', array( __CLASS__, 'filter_allowed_html_tags' ) );
 
 			if ( $settings['allow-users'] ) {
 				// User settings.
@@ -144,6 +145,33 @@ class Classic_Editor {
 			remove_filter( 'display_post_states', 'gutenberg_add_gutenberg_post_state' );
 			remove_action( 'edit_form_top', 'gutenberg_remember_classic_editor_when_saving_posts' );
 		}
+	}
+
+	public static function filter_allowed_html_tags( $content ) {
+		if ( isset( $_GET['classic-editor'] ) || self::is_classic_editor_context() ) {
+			$allowed_tags = [
+				'strong'     => [],
+				'em'         => [],
+				'del'        => [],
+				'blockquote' => [],
+				'a'          => [ 'href' => [] ],
+				'ins'        => [ 'datetime' => [] ],
+				'img'        => [ 'src' => [], 'alt' => [] ],
+				'ul'         => [],
+				'ol'         => [],
+				'li'         => [],
+				'code'       => [],
+			];
+
+			return wp_kses( $content, $allowed_tags );
+		}
+
+		return $content;
+	}
+
+	private static function is_classic_editor_context() {
+		global $pagenow;
+		return $pagenow === 'post.php' && ! use_block_editor_for_post( self::get_edited_post_id() );
 	}
 
 	public static function remove_gutenberg_hooks( $remove = 'all' ) {
