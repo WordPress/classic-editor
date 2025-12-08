@@ -2,7 +2,7 @@
 Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce, ironprogrammer
 Tags: classic editor, block editor, editor, gutenberg
 Requires at least: 4.9
-Tested up to: 6.7
+Tested up to: 6.9
 Stable tag: 1.6.7
 Requires PHP: 5.2.4
 License: GPLv2 or later
