@@ -12,7 +12,7 @@
  * License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: classic-editor
  * Domain Path: /languages
- * Requires at least: 4.9
+ * Requires at least: 6.7.2
  * Requires PHP: 5.2.4
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
@@ -68,13 +68,6 @@ class Classic_Editor {
 
 		// Fix for Safari 18 negative horizontal margin on floats.
 		add_action( 'admin_print_styles', array( __CLASS__, 'safari_18_temp_fix' ) );
-
-		// Fix for the Categories postbox on the classic Edit Post screen for WP 6.7.1.
-		global $wp_version;
-
-		if ( '6.7.1' === $wp_version && is_admin() ) {
-			add_filter( 'script_loader_src', array( __CLASS__, 'replace_post_js_2' ), 11, 2 );
-		}
 
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
@@ -1010,21 +1003,6 @@ class Classic_Editor {
 	// Back-compat
 	public static function replace_post_js( $scripts ) {
 		_deprecated_function( __METHOD__, '1.6.7' );
-	}
-
-	/**
-	 * Fix for the Categories postbox on the classic Edit Post screen for WP 6.7.1.
-	 * See: https://core.trac.wordpress.org/ticket/62504 and 
-	 * https://github.com/WordPress/classic-editor/issues/222.
-	 */
-	public static function replace_post_js_2( $src, $handle ) {
-		if ( 'post' === $handle && is_string( $src ) && false === strpos( $src, 'ver=62504-20241121' ) ) {
-			$suffix = wp_scripts_get_suffix();
-			$src    = plugins_url( 'scripts/', __FILE__ ) . "post{$suffix}.js";
-			$src    = add_query_arg( 'ver', '62504-20241121', $src );
-		}
-
-		return $src;
 	}
 }
 

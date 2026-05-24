@@ -1,7 +1,7 @@
 === Classic Editor ===
 Contributors: wordpressdotorg, azaozz, melchoyce, chanthaboune, alexislloyd, pento, youknowriad, desrosj, luciano-croce, ironprogrammer
 Tags: classic editor, block editor, editor, gutenberg
-Requires at least: 4.9
+Requires at least: 6.7.2
 Tested up to: 6.9
 Stable tag: 1.6.7
 Requires PHP: 5.2.4
