@@ -80,6 +80,16 @@ class Classic_Editor {
 			add_filter( 'script_loader_src', array( __CLASS__, 'replace_post_js_2' ), 11, 2 );
 		}
 
+		/*
+		 * 7.0 applied a fresh coat of paint to the admin area of WordPress. An unintended side effect was that
+		 * buttons are crowded in the Publish meta box.
+		 *
+		 * See https://core.trac.wordpress.org/ticket/65286.
+		 */
+		if ( version_compare( $wp_version, '7.0', '>=' ) ) {
+			wp_enqueue_style( 'classic-editor-hotfix-7-0', plugins_url( 'css/hotfix-7-0.css', __FILE__ ), array(), CLASSIC_EDITOR_VERSION );
+		}
+
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
 		}
