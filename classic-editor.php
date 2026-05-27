@@ -81,7 +81,7 @@ class Classic_Editor {
 		}
 
         if ( version_compare( $wp_version, '7.0', '>=' ) ) {
-            add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_70_hotfix' ) );
+            add_action( 'admin_print_styles', array( __CLASS__, 'print_70_publishing_actions_hotfix' ) );
         }
 
 		if ( ! $block_editor && ! $gutenberg  ) {
@@ -1042,15 +1042,20 @@ class Classic_Editor {
      * buttons are crowded within the Publish meta box.
      *
      * See https://core.trac.wordpress.org/ticket/65286.
-     *
-     * @param $hook_suffix string The current admin page.
      */
-    public static function enqueue_70_hotfix( $hook_suffix ) {
+    public static function print_70_publishing_actions_hotfix() {
+        global $hook_suffix;
+
         if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
             return;
         }
-
-        wp_enqueue_style( 'classic-editor-hotfix-7-0', plugins_url( 'css/hotfix-7-0.css', __FILE__ ), array(), CLASSIC_EDITOR_VERSION );
+        ?>
+        <style>
+            #major-publishing-actions {
+                flex-wrap: wrap;
+            }
+        </style>
+        <?php
     }
 }
 
