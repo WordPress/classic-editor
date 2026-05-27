@@ -27,6 +27,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Invalid request.' );
 }
 
+if ( ! defined( 'CLASSIC_EDITOR_VERSION' ) ) {
+	define( 'CLASSIC_EDITOR_VERSION', '1.6.7' );
+}
+
 if ( ! class_exists( 'Classic_Editor' ) ) :
 class Classic_Editor {
 	private static $settings;
@@ -709,7 +713,7 @@ class Classic_Editor {
 			'classic-editor-plugin',
 			plugins_url( 'js/block-editor-plugin.js', __FILE__ ),
 			array( 'wp-element', 'wp-components', 'lodash' ),
-			'1.4',
+			CLASSIC_EDITOR_VERSION,
 			true
 		);
 
