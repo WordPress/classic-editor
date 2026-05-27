@@ -80,15 +80,9 @@ class Classic_Editor {
 			add_filter( 'script_loader_src', array( __CLASS__, 'replace_post_js_2' ), 11, 2 );
 		}
 
-		/*
-		 * 7.0 applied a fresh coat of paint to the admin area of WordPress. An unintended side effect was that
-		 * buttons are crowded in the Publish meta box.
-		 *
-		 * See https://core.trac.wordpress.org/ticket/65286.
-		 */
-		if ( version_compare( $wp_version, '7.0', '>=' ) ) {
-			wp_enqueue_style( 'classic-editor-hotfix-7-0', plugins_url( 'css/hotfix-7-0.css', __FILE__ ), array(), CLASSIC_EDITOR_VERSION );
-		}
+        if ( version_compare( $wp_version, '7.0', '>=' ) ) {
+            add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_70_hotfix' ) );
+        }
 
 		if ( ! $block_editor && ! $gutenberg  ) {
 			return;
@@ -1040,6 +1034,24 @@ class Classic_Editor {
 
 		return $src;
 	}
+
+    /**
+     * Enqueues styles to address crowded buttons in WordPress 7.0.
+     *
+     * 7.0 applied a fresh coat of paint to the admin area of WordPress. An unintended side effect was that
+     * buttons are crowded within the Publish meta box.
+     *
+     * See https://core.trac.wordpress.org/ticket/65286.
+     *
+     * @param $hook_suffix string The current admin page.
+     */
+    public static function enqueue_70_hotfix( $hook_suffix ) {
+        if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
+            return;
+        }
+
+        wp_enqueue_style( 'classic-editor-hotfix-7-0', plugins_url( 'css/hotfix-7-0.css', __FILE__ ), array(), CLASSIC_EDITOR_VERSION );
+    }
 }
 
 add_action( 'plugins_loaded', array( 'Classic_Editor', 'init_actions' ) );
