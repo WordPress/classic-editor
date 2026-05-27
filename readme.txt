@@ -29,6 +29,9 @@ By default, this plugin hides all functionality available in the new block edito
 
 == Changelog ==
 
+= 1.7.0 =
+* Added a hotfix for publishing actions in WordPress 7.0.
+
 = 1.6.7 =
 * Fixed loading of script translations when post.js is replaced in WordPress 6.7.1.
 
