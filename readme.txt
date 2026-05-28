@@ -30,7 +30,7 @@ By default, this plugin hides all functionality available in the new block edito
 == Changelog ==
 
 = 1.7.0 =
-* Added a hotfix for publishing actions in WordPress 7.0.
+* Added a hotfix for crowded elements in the publishing actions area in WordPress 7.0. See [Core-65286](https://core.trac.wordpress.org/ticket/65286) for more information.
 
 = 1.6.7 =
 * Fixed loading of script translations when post.js is replaced in WordPress 6.7.1.
