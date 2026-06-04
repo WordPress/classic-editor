@@ -331,7 +331,11 @@ class Classic_Editor {
 			}
 		}
 
-		if ( isset( $_GET['classic-editor'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['classic-editor'] ) ) { 
+			 // The 'classic-editor' GET parameter is used only to determine editor preference.
+			// No data is stored or modified here, so nonce verification is not required.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
 			return true;
 		}
 
