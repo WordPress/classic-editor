@@ -377,7 +377,7 @@ class Classic_Editor {
 		if ( function_exists( 'add_allowed_options' ) ) {
 			add_allowed_options( $allowed_options );
 		} else {
-			add_option_whitelist( $allowed_options );
+			add_option_whitelist( $allowed_options ); // phpcs:ignore WordPress.WP.DeprecatedFunctions -- 4.9 fallback, only called when add_allowed_options() doesn't exist
 		}
 
 		$heading_1 = __( 'Default editor for all users', 'classic-editor' );
