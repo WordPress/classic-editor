@@ -430,11 +430,11 @@ class Classic_Editor {
 		<div class="classic-editor-options">
 			<p>
 				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
-				<label for="classic-editor-classic"><?php _ex( 'Classic editor', 'Editor Name', 'classic-editor' ); ?></label>
+				<label for="classic-editor-classic"><?php echo esc_html_x( 'Classic editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 			<p>
 				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
-				<label for="classic-editor-block"><?php _ex( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
+				<label for="classic-editor-block"><?php echo esc_html_x( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
 		</div>
 		<script>
@@ -454,11 +454,11 @@ class Classic_Editor {
 		<div class="classic-editor-options">
 			<p>
 				<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
-				<label for="classic-editor-allow"><?php _e( 'Yes', 'classic-editor' ); ?></label>
+				<label for="classic-editor-allow"><?php esc_html_e( 'Yes', 'classic-editor' ); ?></label>
 			</p>
 			<p>
 				<input type="radio" name="classic-editor-allow-users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
-				<label for="classic-editor-disallow"><?php _e( 'No', 'classic-editor' ); ?></label>
+				<label for="classic-editor-disallow"><?php esc_html_e( 'No', 'classic-editor' ); ?></label>
 			</p>
 		</div>
 		<?php
@@ -484,7 +484,7 @@ class Classic_Editor {
 		?>
 		<table class="form-table">
 			<tr class="classic-editor-user-options">
-				<th scope="row"><?php _e( 'Default Editor', 'classic-editor' ); ?></th>
+				<th scope="row"><?php esc_html_e( 'Default Editor', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
 				<?php self::settings_1( $user_id ); ?>
@@ -500,28 +500,28 @@ class Classic_Editor {
 		$is_checked = ( get_network_option( null, 'classic-editor-allow-sites' ) === 'allow' );
 
 		?>
-		<h2 id="classic-editor-options"><?php _e( 'Editor Settings', 'classic-editor' ); ?></h2>
+		<h2 id="classic-editor-options"><?php esc_html_e( 'Editor Settings', 'classic-editor' ); ?></h2>
 		<table class="form-table">
 			<?php wp_nonce_field( 'allow-site-admin-settings', 'classic-editor-network-settings' ); ?>
 			<tr>
-				<th scope="row"><?php _e( 'Default editor for all sites', 'classic-editor' ); ?></th>
+				<th scope="row"><?php esc_html_e( 'Default editor for all sites', 'classic-editor' ); ?></th>
 				<td>
 					<p>
 						<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $editor !== 'block' ) echo ' checked'; ?> />
-						<label for="classic-editor-classic"><?php _ex( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
+						<label for="classic-editor-classic"><?php echo esc_html_x( 'Classic Editor', 'Editor Name', 'classic-editor' ); ?></label>
 					</p>
 					<p>
 						<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $editor === 'block' ) echo ' checked'; ?> />
-						<label for="classic-editor-block"><?php _ex( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
+						<label for="classic-editor-block"><?php echo esc_html_x( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
 					</p>
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><?php _e( 'Change settings', 'classic-editor' ); ?></th>
+				<th scope="row"><?php esc_html_e( 'Change settings', 'classic-editor' ); ?></th>
 				<td>
 					<input type="checkbox" name="classic-editor-allow-sites" id="classic-editor-allow-sites" value="allow"<?php if ( $is_checked ) echo ' checked'; ?>>
-					<label for="classic-editor-allow-sites"><?php _e( 'Allow site admins to change settings', 'classic-editor' ); ?></label>
-					<p class="description"><?php _e( 'By default the block editor is replaced with the classic editor and users cannot switch editors.', 'classic-editor' ); ?></p>
+					<label for="classic-editor-allow-sites"><?php esc_html_e( 'Allow site admins to change settings', 'classic-editor' ); ?></label>
+					<p class="description"><?php esc_html_e( 'By default the block editor is replaced with the classic editor and users cannot switch editors.', 'classic-editor' ); ?></p>
 				</td>
 			</tr>
 		</table>
@@ -695,7 +695,7 @@ class Classic_Editor {
 
 		?>
 		<p style="margin: 1em 0;">
-			<a href="<?php echo esc_url( $edit_url ); ?>"><?php _e( 'Switch to block editor', 'classic-editor' ); ?></a>
+			<a href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Switch to block editor', 'classic-editor' ); ?></a>
 		</p>
 		<?php
 	}
@@ -1008,7 +1008,7 @@ class Classic_Editor {
 			?>
 			<style id="classic-editor-safari-18-temp-fix">
 			_::-webkit-full-page-media, _:future, :root #post-body #postbox-container-2 {
-				clear: <?php echo $clear; ?>;
+				clear: <?php echo esc_html( $clear ); ?>;
 			}
 			</style>
 			<?php
