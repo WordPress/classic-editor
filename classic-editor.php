@@ -391,7 +391,7 @@ class Classic_Editor {
 		if (
 			isset( $_POST['classic-editor-user-settings'] ) &&
 			isset( $_POST['classic-editor-replace'] ) &&
-			wp_verify_nonce( $_POST['classic-editor-user-settings'], 'allow-user-settings' ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			wp_verify_nonce( wp_unslash( $_POST['classic-editor-user-settings'] ), 'allow-user-settings' ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		) {
 			$user_id = (int) $user_id;
 
@@ -399,7 +399,7 @@ class Classic_Editor {
 				return;
 			}
 
-			$editor = self::validate_option_editor( $_POST['classic-editor-replace'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$editor = self::validate_option_editor( wp_unslash( $_POST['classic-editor-replace'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			update_user_option( $user_id, 'classic-editor-settings', $editor );
 		}
 	}
@@ -532,7 +532,7 @@ class Classic_Editor {
 		if (
 			isset( $_POST['classic-editor-network-settings'] ) &&
 			current_user_can( 'manage_network_options' ) &&
-			wp_verify_nonce( $_POST['classic-editor-network-settings'], 'allow-site-admin-settings' ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			wp_verify_nonce( wp_unslash( $_POST['classic-editor-network-settings'] ), 'allow-site-admin-settings' ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		) {
 			if ( isset( $_POST['classic-editor-replace'] ) && $_POST['classic-editor-replace'] === 'block' ) {
 				update_network_option( null, 'classic-editor-replace', 'block' );
@@ -646,7 +646,7 @@ class Classic_Editor {
 	public static function redirect_location( $location ) {
 		if (
 			isset( $_REQUEST['classic-editor'] ) || // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			( isset( $_POST['_wp_http_referer'] ) && strpos( $_POST['_wp_http_referer'], '&classic-editor' ) !== false ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+			( isset( $_POST['_wp_http_referer'] ) && strpos( wp_unslash( $_POST['_wp_http_referer'] ), '&classic-editor' ) !== false ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
 		) {
 			$location = add_query_arg( 'classic-editor', '', $location );
 		}
