@@ -1027,7 +1027,11 @@ class Classic_Editor {
 	 */
 	public static function replace_post_js_2( $src, $handle ) {
 		if ( 'post' === $handle && is_string( $src ) && false === strpos( $src, 'ver=62504-20241121' ) ) {
-			$suffix = wp_scripts_get_suffix();
+			if ( function_exists( 'wp_scripts_get_suffix' ) ) {
+				$suffix = wp_scripts_get_suffix();
+			} else {
+				$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+			}
 			$src    = plugins_url( 'scripts/', __FILE__ ) . "post{$suffix}.js";
 			$src    = add_query_arg( 'ver', '62504-20241121', $src );
 		}
