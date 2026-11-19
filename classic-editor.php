@@ -423,11 +423,16 @@ class Classic_Editor {
 		return 'disallow';
 	}
 
-	public static function settings_1( $user_id = 0 ) {
+	public static function settings_1( $user_id = 0, $legend = '' ) {
 		$settings = self::get_settings( 'refresh', $user_id );
 
+		if ( ! is_string( $legend ) || '' === $legend ) {
+			$legend = __( 'Default editor for all users', 'classic-editor' );
+		}
+
 		?>
-		<div class="classic-editor-options">
+		<fieldset class="classic-editor-options">
+			<legend class="screen-reader-text"><span><?php echo esc_html( $legend ); ?></span></legend>
 			<p>
 				<input type="radio" name="classic-editor-replace" id="classic-editor-classic" value="classic"<?php if ( $settings['editor'] === 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-classic"><?php _ex( 'Classic editor', 'Editor Name', 'classic-editor' ); ?></label>
@@ -436,7 +441,7 @@ class Classic_Editor {
 				<input type="radio" name="classic-editor-replace" id="classic-editor-block" value="block"<?php if ( $settings['editor'] !== 'classic' ) echo ' checked'; ?> />
 				<label for="classic-editor-block"><?php _ex( 'Block editor', 'Editor Name', 'classic-editor' ); ?></label>
 			</p>
-		</div>
+		</fieldset>
 		<script>
 		jQuery( 'document' ).ready( function( $ ) {
 			if ( window.location.hash === '#classic-editor-options' ) {
@@ -451,7 +456,8 @@ class Classic_Editor {
 		$settings = self::get_settings( 'refresh' );
 
 		?>
-		<div class="classic-editor-options">
+		<fieldset class="classic-editor-options">
+			<legend class="screen-reader-text"><span><?php _e( 'Allow users to switch editors', 'classic-editor' ); ?></span></legend>
 			<p>
 				<input type="radio" name="classic-editor-allow-users" id="classic-editor-allow" value="allow"<?php if ( $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-allow"><?php _e( 'Yes', 'classic-editor' ); ?></label>
@@ -460,7 +466,7 @@ class Classic_Editor {
 				<input type="radio" name="classic-editor-allow-users" id="classic-editor-disallow" value="disallow"<?php if ( ! $settings['allow-users'] ) echo ' checked'; ?> />
 				<label for="classic-editor-disallow"><?php _e( 'No', 'classic-editor' ); ?></label>
 			</p>
-		</div>
+		</fieldset>
 		<?php
 	}
 
@@ -487,7 +493,7 @@ class Classic_Editor {
 				<th scope="row"><?php _e( 'Default Editor', 'classic-editor' ); ?></th>
 				<td>
 				<?php wp_nonce_field( 'allow-user-settings', 'classic-editor-user-settings' ); ?>
-				<?php self::settings_1( $user_id ); ?>
+				<?php self::settings_1( $user_id, __( 'Default Editor', 'classic-editor' ) ); ?>
 				</td>
 			</tr>
 		</table>
